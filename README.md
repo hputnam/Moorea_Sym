@@ -14,4 +14,4 @@ README
 
 ## Sequence files
 
-```https://drive.google.com/file/d/0B2faaJ3NoqEUejc5N09VZjdwNUk/view?usp=sharing```
+https://drive.google.com/file/d/0B2faaJ3NoqEUejc5N09VZjdwNUk/view?usp=sharing
