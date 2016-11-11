@@ -6,9 +6,9 @@ README
 
 ```/Bioinf```
 
-```RAnalysis/Data```
+```/RAnalysis/Data```
 
-```RAnalysis/Scripts```
+```/RAnalysis/Scripts```
 
-```RAnalysis/Output```
+```/RAnalysis/Output```
 
