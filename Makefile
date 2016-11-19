@@ -1,5 +1,9 @@
-all: RAnalysis/Data/Moorea.RData
-	
+all: RAnalysis/Data/Moorea_sym.RData
+
+# Filter out sequences that are not Symbiodinium
+RAnalysis/Data/Moorea_sym.RData: RAnalysis/Data/Moorea.RData
+	R --vanilla < ~/SymITS2/filter_notsym.R --args RAnalysis/Data/Moorea.RData Bioinf/clust/all_rep_set_rep_set.fasta RAnalysis/Data/Moorea_sym.RData
+
 # Build phyloseq object
 RAnalysis/Data/Moorea.RData: Bioinf/clust/all_rep_set_rep_set_nw_tophits.tsv Bioinf/clust/97_otus_bysample.tsv RAnalysis/Data/Moorea_sample_info.tsv
 	R --vanilla < ~/SymITS2/build_phyloseq.R --args \
