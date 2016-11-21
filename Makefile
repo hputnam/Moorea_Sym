@@ -18,7 +18,7 @@ Bioinf/clust/all_rep_set_rep_set_nw_tophits.tsv: Bioinf/clust/all_rep_set_rep_se
 	R --vanilla < ~/SymITS2/run_nw.R --args $< Bioinf/ITS2db_trimmed_derep.fasta
 	
 # Cluster at 97% within samples
-Bioinf/clust: Bioinf/Moorea_seqs.fasta
+Bioinf/clust/all_rep_set_rep_set.fasta: Bioinf/Moorea_seqs.fasta
 	~/SymITS2/otus_97_bysample.sh Bioinf/Moorea_seqs.fasta Bioinf/clust
 	
 # Uncompress sequences
