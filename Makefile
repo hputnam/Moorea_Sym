@@ -5,7 +5,7 @@ RAnalysis/Data/Moorea_sym.RData: RAnalysis/Data/Moorea.RData
 	R --vanilla < ~/SymITS2/filter_notsym.R --args RAnalysis/Data/Moorea.RData Bioinf/clust/all_rep_set_rep_set.fasta RAnalysis/Data/Moorea_sym.RData
 
 # Build phyloseq object
-RAnalysis/Data/Moorea.RData: Bioinf/clust/all_rep_set_rep_set_nw_tophits.tsv Bioinf/clust/97_otus_bysample.tsv RAnalysis/Data/Moorea_sample_info.tsv
+RAnalysis/Data/Moorea.RData: Bioinf/clust/all_rep_set_rep_set_nw_tophits.tsv Bioinf/clust/97_otus_bysample.tsv RAnalysis/Data/Moorea_sample_info.tsv Bioinf/clust100/100_nw_tophits.tsv
 	R --vanilla < ~/SymITS2/build_phyloseq.R --args \
 	Bioinf/clust/all_rep_set_rep_set_nw_tophits.tsv \
 	RAnalysis/Data/Moorea_sample_info.tsv \
@@ -17,10 +17,18 @@ RAnalysis/Data/Moorea.RData: Bioinf/clust/all_rep_set_rep_set_nw_tophits.tsv Bio
 Bioinf/clust/all_rep_set_rep_set_nw_tophits.tsv: Bioinf/clust/all_rep_set_rep_set.fasta Bioinf/ITS2db_trimmed_derep.fasta
 	R --vanilla < ~/SymITS2/run_nw.R --args $< Bioinf/ITS2db_trimmed_derep.fasta
 	
+# Assign taxonomy using Needleman-Wunsch global alignment to database for 100% clustering
+Bioinf/clust100/100_nw_tophits.tsv: Bioinf/clust100/100_otus_rep_set.fasta Bioinf/ITS2db_trimmed_derep.fasta
+	R --vanilla < ~/SymITS2/run_nw.R --args Bioinf/clust100/100_otus_rep_set.fasta Bioinf/ITS2db_trimmed_derep.fasta
+
 # Cluster at 97% within samples
 Bioinf/clust/all_rep_set_rep_set.fasta: Bioinf/Moorea_seqs.fasta
 	~/SymITS2/otus_97_bysample.sh Bioinf/Moorea_seqs.fasta Bioinf/clust
 	
+# Cluster at 100%
+Bioinf/clust100/100_otus.tsv: Bioinf/Moorea_seqs.fasta
+	~/SymITS2/otus_100.sh Bioinf/Moorea_seqs.fasta Bioinf/clust100
+
 # Uncompress sequences
 Bioinf/Moorea_seqs.fasta: Bioinf/Moorea_seqs.tar.gz
 	tar -xzvf Bioinf/Moorea_seqs.tar.gz -m -C Bioinf/
