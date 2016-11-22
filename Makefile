@@ -23,7 +23,7 @@ Bioinf/clust/all_rep_set_rep_set.fasta: Bioinf/Moorea_seqs.fasta
 	
 # Uncompress sequences
 Bioinf/Moorea_seqs.fasta: Bioinf/Moorea_seqs.tar.gz
-	tar -xzvf Bioinf/Moorea_seqs.tar.gz -m
+	tar -xzvf Bioinf/Moorea_seqs.tar.gz -m -C Bioinf/
 	
 
 	
