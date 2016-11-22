@@ -86,7 +86,7 @@ composition <- function(phy, col, legend=T) {
   #samdat$Genus <- factor(samdat$Genus, levels=rev(levels(samdat$Genus)))
   samdat$Species <- factor(samdat$Species, levels=rev(levels(samdat$Species)))
   samdat$Site <- factor(samdat$Site, levels=rev(levels(samdat$Site)))
-  samdat <- samdat[with(samdat, order(Species, Site)), ]
+  samdat <- samdat[with(samdat, order(Species, Site, -DNA.ID)), ]
   typerelabund <- as.matrix(otu_table(phy)[order(data.frame(tax_table(phy))$hit), 
                                            rownames(samdat)])
   sitebreaks <- c(as.character(samdat$Site), "X")==c("X", as.character(samdat$Site))
@@ -103,7 +103,7 @@ composition <- function(phy, col, legend=T) {
     legend(x=par("usr")[2]/2, y=par("usr")[4], xjust=0.5, yjust=0.25, horiz=T, bty="n", xpd=T, 
            cex=0.7, legend=c("A", "C", "D"), fill=taxcolors, x.intersp=0.5)
     legend(x=par("usr")[2]*1.1, y=par("usr")[4]*0.75, xjust=0, yjust=0.1, bty="n", xpd=T, cex=1, 
-           pt.cex=1, legend=c("Site 1", "Site 2", "Site 3", "Site 7", "Site 8", "Site 9"), fill=c("red", "orange", "yellow", "green", "blue", "purple"), y.intersp=0.7, 
+           pt.cex=1, legend=c("Site 1", "Site 2", "Site 3", "Site 7", "Site 8", "Site 9"), fill=c("purple", "blue", "green", "yellow", "orange", "red"), y.intersp=0.7, 
            x.intersp=0.3)
   }
   # Add grouping bars for Site
@@ -121,6 +121,9 @@ composition <- function(phy, col, legend=T) {
     text(1.03, (spbreaks[i] + spbreaks[i+1]) / 2, xpd=T, pos=4, cex=0.8,
          labels=paste(samdat$Genus[which(duplicated(samdat$Species)==F)][i], "\n",
                       samdat$Species[which(duplicated(samdat$Species)==F)][i], sep=""))
+  }
+  for (i in 1:nrow(samdat)) {
+    text(0, i-0.5, rownames(samdat)[i], xpd=T, cex=0.7, pos=2)
   }
 }
 
