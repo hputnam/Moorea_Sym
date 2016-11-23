@@ -1,0 +1,194 @@
+---
+title: "Moorea 'fixed' *Symbiodinium* data exploration"
+author: "Ross Cunning"
+date: "November 18, 2016"
+output: html_document
+---
+
+```{r load}
+library(phyloseq)
+
+taxcolors <- matrix(c("#8dd3c7", "#bebada", "#fb8072"), 
+                    dimnames=list(c("CladeA", "CladeC", "CladeD")))
+
+options(stringsAsFactors = FALSE)
+
+setwd("../Bioinf/fixed/")
+load("Moorea_sym.RData")  # loads phyloseq object named phy.f
+
+# Filter OTUs by minimum count
+# Set threshold count
+n <- 10
+# Identify OTUs below threshold count
+taxa <- taxa_sums(phy.f)[which(taxa_sums(phy.f) >= n)]
+# Remove taxa below threshold count
+phy.f <- prune_taxa(names(taxa), phy.f)
+
+
+# Filter samples by minimum count
+# Set threshold number of reads
+sn <- 100
+# Remove samples with fewer reads than threshold
+phy.f <- prune_samples(sample_sums(phy.f)>=sn, phy.f)
+
+
+# Filter OTUs by minimum count again in case any dropped below threshold after filtering samples
+# Identify OTUs below threshold count
+taxa <- taxa_sums(phy.f)[which(taxa_sums(phy.f) >= n)]
+# Remove taxa below threshold count
+phy.f <- prune_taxa(names(taxa), phy.f)
+
+
+# Label clades and subtypes for filtered phyloseq object tax_tables
+get.st <- function(df) {
+  within(df, {
+    Clade <- substr(hit, 1, 1)
+    Subtype <- gsub(hit, pattern="_[A-Z]{2}[0-9]{6}", replacement="")
+    Subtype <- gsub(Subtype, pattern="_multiple", replacement="")
+    Subtype2 <- ifelse(as.numeric(sim)==100, paste0("'", Subtype, "'"),
+                       paste0("'[", rep(rle(sort(Subtype))$values, times=rle(sort(Subtype))$lengths), "]'^", 
+                              unlist(lapply(rle(sort(Subtype))$lengths, seq_len)))[order(order(Subtype))])
+    #Subtype <- ifelse(as.numeric(sim)==100, Subtype, paste("*", Subtype, sep=""))
+  })
+}
+
+tax_table(phy.f) <- as.matrix(get.st(data.frame(tax_table(phy.f), stringsAsFactors=FALSE)))
+
+# Convert to proportion (relative abundance)
+phy.f.p <- transform_sample_counts(phy.f, function(x) x/sum(x))
+# Apply transformation function
+transform <- function(x) sqrt(x/sum(x))  # Set transformation function
+phy.f.t <- transform_sample_counts(phy.f, transform)  # Transform data
+```
+
+
+# Clade overview
+The relative abundance of each clade in the entire dataset (normalized for differences in sequencing depth across samples).
+```{r clades}
+cladeAbund <- aggregate(data.frame(RelAbund=rowSums(otu_table(phy.f.p))),
+                        by=list(Clade=data.frame(tax_table(phy.f.p))$Clade), FUN=sum)
+cladeAbund$Prop <- prop.table(cladeAbund$RelAbund)
+
+bars <- barplot(cladeAbund$Prop*100, col=taxcolors, space=0,
+                names.arg=cladeAbund$Clade, xlab=expression(paste(italic('Symbiodinium'), " Clade")),
+                ylab="Relative abundance (%)")
+text(bars, cladeAbund$Prop*100+2, labels=round(cladeAbund$Prop*100, 1), xpd=T)
+
+cladeAbund$Notus <- table(data.frame(tax_table(phy.f.p))$Clade)
+cladeAbund$Notus
+```
+
+
+# Clade compostion of each sample
+In the first chart, bars are colored according to *Symbiodinium* clade. In the second chart, bars are colored according to OTU.
+```{r cladecomp}
+composition <- function(phy, col, legend=T) {
+  samdat <- data.frame(sample_data(phy))
+  #samdat$Genus <- factor(samdat$Genus, levels=rev(levels(samdat$Genus)))
+  samdat$Species <- factor(samdat$Species, levels=rev(levels(samdat$Species)))
+  samdat$Site <- factor(samdat$Site, levels=rev(levels(samdat$Site)))
+  samdat <- samdat[with(samdat, order(Species, Site, -DNA.ID)), ]
+  typerelabund <- as.matrix(otu_table(phy)[order(data.frame(tax_table(phy))$hit), 
+                                           rownames(samdat)])
+  sitebreaks <- c(as.character(samdat$Site), "X")==c("X", as.character(samdat$Site))
+  sitebreaks <- which(sitebreaks==F) - 1
+  spbreaks <- c(which(duplicated(samdat$Species)==F) - 1, nrow(samdat))
+  
+  # Make Barplot
+  barplot(typerelabund, horiz=T, space=0, axes=F,axisnames=F, yaxs="i", col=col)
+  rect(0, 0, par("usr")[2], par("usr")[4], lwd=1, xpd=T)
+  axis(side=1, at=seq(0, 1, 0.1), line=0, tck=-0.025, mgp=c(0,0.25,0), cex.axis=0.7)
+  mtext(side=1, "Relative abundance", cex=0.7, line=1)
+  # Add legend
+  if (legend==T) {
+    legend(x=par("usr")[2]/2, y=par("usr")[4], xjust=0.5, yjust=0.25, horiz=T, bty="n", xpd=T, 
+           cex=0.7, legend=c("A", "C", "D"), fill=taxcolors, x.intersp=0.5)
+    legend(x=par("usr")[2]*1.1, y=par("usr")[4]*0.75, xjust=0, yjust=0.1, bty="n", xpd=T, cex=1, 
+           pt.cex=1, legend=c("Site 1", "Site 2", "Site 3", "Site 7", "Site 8", "Site 9"), fill=c("purple", "blue", "green", "yellow", "orange", "red"), y.intersp=0.7, 
+           x.intersp=0.3)
+  }
+  # Add grouping bars for Site
+  sitecolors <- matrix(c("red", "orange", "yellow", "green", "blue", "purple"), 
+              dimnames=list(c("Site 1", "Site 2", "Site 3", "Site 7", "Site 8", "Site 9"))) 
+  for (i in 1:length(sitebreaks)) {
+    lines(c(0, 1), c(sitebreaks[i], sitebreaks[i]), lty=2, lwd=0.25)
+    rect(1.01, sitebreaks[i], 1.04, sitebreaks[i+1], col=sitecolors[samdat$Site[sitebreaks[i]+1],], 
+         lwd=0.25, xpd=T)
+  }
+  
+  # Add lines to separate species and species names
+  for (i in 1:length(spbreaks)) {
+    lines(c(0, 1.07), c(spbreaks[i], spbreaks[i]), xpd=T, type="l", lwd=0.4)
+    text(1.03, (spbreaks[i] + spbreaks[i+1]) / 2, xpd=T, pos=4, cex=0.8,
+         labels=paste(samdat$Genus[which(duplicated(samdat$Species)==F)][i], "\n",
+                      samdat$Species[which(duplicated(samdat$Species)==F)][i], sep=""))
+  }
+  for (i in 1:nrow(samdat)) {
+    text(0, i-0.5, rownames(samdat)[i], xpd=T, cex=0.7, pos=2)
+  }
+}
+
+par(mfrow=c(1,1), mar=c(2, 1.5, 2, 10), lwd=0.1, cex=0.7, xpd=NA)
+# Plot composition of 97% within-sample OTUs colored by clade
+composition(phy.f.p, col=taxcolors[factor(data.frame(tax_table(phy.f.p))[order(data.frame(tax_table(phy.f.p))$Subtype), ]$Clade, levels=c("A","C","D"))], legend=T)
+
+
+composition(phy.f.p, col=rainbow(ntaxa(phy.f.p)), legend=T)
+```
+
+```{r div}
+#plot_richness(phy, x="Site", color = "Species")
+```
+
+# Analyze temperature distributions for each site
+```{r tempdata}
+library(moments)
+library(diptest)
+hyperskewness <- function(x) moment(na.omit(x), order=5, central=T) / sd(na.omit(x))^5
+hyperflatness <- function(x) moment(na.omit(x), order=6, central=T) / sd(na.omit(x))^6
+
+# Import temperature data
+temp <- read.csv("Data/Moorea_Temp_Data.csv")
+temp$Date.Time <- as.POSIXct(temp$Date.Time, format="%m/%d/%y %T", tz="Pacific/Tahiti")
+
+# Plot temperature distributions for each site
+par(mfrow=c(2,3), mar=c(3,3,2,2), mgp=c(1.5,0.1,0), tcl=-0.2)
+hist(temp$Site.1, xlim=c(26.5,31.5), breaks=20, main="Site 1", xlab="Temp °C")
+hist(temp$Site.2, xlim=c(26.5,31.5), breaks=20, main="Site 2", xlab="Temp °C")
+hist(temp$Site.3, xlim=c(26.5,31.5), breaks=20, main="Site 3", xlab="Temp °C")
+hist(temp$Site.7, xlim=c(26.5,31.5), breaks=20, main="Site 7", xlab="Temp °C")
+hist(temp$Site.8, xlim=c(26.5,31.5), breaks=20, main="Site 8", xlab="Temp °C")
+hist(temp$Site.9, xlim=c(26.5,31.5), breaks=20, main="Site 9", xlab="Temp °C")
+
+# Calculate summary statistics for each site
+temp.summ <- data.frame(mean=apply(temp[,2:7], 2, FUN=mean, na.rm=T),
+                        med=apply(temp[,2:7], 2, FUN=median, na.rm=T),
+                        sd=apply(temp[,2:7], 2, FUN=sd, na.rm=T),
+                        var=apply(temp[,2:7], 2, FUN=var, na.rm=T),
+                        min=apply(temp[,2:7], 2, FUN=min, na.rm=T),
+                        max=apply(temp[,2:7], 2, FUN=max, na.rm=T),
+                        range=apply(temp[,2:7], 2, FUN=function(x) diff(range(x, na.rm=T))),
+                        skew=apply(temp[,2:7], 2, FUN=skewness, na.rm=T),
+                        kurt=apply(temp[,2:7], 2, FUN=function(x) kurtosis(na.omit(x))-3),
+                        hskew=apply(temp[,2:7], 2, FUN=hyperskewness),
+                        hflat=apply(temp[,2:7], 2, FUN=hyperflatness),
+                        dip=apply(temp[,2:7], 2, FUN=function(x) dip(na.omit(x))))
+temp.summ
+
+
+# Plot rank order of various metrics
+with(temp.summ, {
+  par(mar=c(3,4,6,1), mfrow=c(1,1))
+  plot(NA, xaxt="n", xlim=c(1,6), ylim=c(1,6), xlab="", ylab="Rank Order")
+  axis(side=1, at=1:6, labels = rownames(temp.summ))
+  lines(rank(var), type="b", pch=5, col="green")
+  lines(rank(skew), type="b", pch=2, col="blue")
+  lines(rank(kurt), type="b", pch=4, col="purple")
+  lines(rank(hflat), type="b", pch=6, col="black")
+  lines(rank(dip), type="b", pch=7, col="pink")
+  legend("top", legend=c("variance", "skewness", "kurtosis", "hyperflatness", "bimodality"),
+         lty=1, col=c("green", "blue", "purple", "black", "pink"),
+         pch=c(5,2,4,6,7), inset=c(0,-0.4), xpd=NA)
+})
+```
+
