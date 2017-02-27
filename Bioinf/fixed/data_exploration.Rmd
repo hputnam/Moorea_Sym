@@ -13,7 +13,7 @@ taxcolors <- matrix(c("#8dd3c7", "#bebada", "#fb8072"),
 
 options(stringsAsFactors = FALSE)
 
-setwd("../Bioinf/fixed/")
+setwd("/Users/jrcunning/Documents/Academia/HIMB/Moorea_Sym/Bioinf/fixed")
 load("Moorea_sym.RData")  # loads phyloseq object named phy.f
 
 # Filter OTUs by minimum count
@@ -141,7 +141,7 @@ composition(phy.f.p, col=rainbow(ntaxa(phy.f.p)), legend=T)
 ```
 
 # Analyze temperature distributions for each site
-```{r tempdata}
+```{r tempdata, eval=F, include=F}
 library(moments)
 library(diptest)
 hyperskewness <- function(x) moment(na.omit(x), order=5, central=T) / sd(na.omit(x))^5
