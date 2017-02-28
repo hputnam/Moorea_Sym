@@ -58,6 +58,9 @@ phy.f.p <- transform_sample_counts(phy.f, function(x) x/sum(x))
 # Apply transformation function
 transform <- function(x) sqrt(x/sum(x))  # Set transformation function
 phy.f.t <- transform_sample_counts(phy.f, transform)  # Transform data
+
+plot_bar(phy.f)
+
 ```
 
 
@@ -147,7 +150,69 @@ hyperskewness <- function(x) moment(na.omit(x), order=5, central=T) / sd(na.omit
 hyperflatness <- function(x) moment(na.omit(x), order=6, central=T) / sd(na.omit(x))^6
 
 # Import temperature data
-temp <- read.csv("Data/Moorea_Temp_Data.csv")
+#temp <- read.csv("Data/Moorea_Temp_Data.csv")
+
+tile1.1 <- read.csv("Data/Tiles1_1_905379_Jan06_Sept06.csv")
+tile1.1 <- tile1.1[,c(1:2)]
+tile1.2 <- read.csv("Data/Tiles1_2_905385_Sept06_Jan07.csv")
+tile1.2 <- tile1.2[,c(1:2)]
+tile1.3 <- read.csv("Data/Tiles1_3_905383_Jan07_Sept07.csv")
+tile1.3 <- tile1.3[,c(1:2)]
+tile1.4 <- read.csv("Data/Tiles1_4_905377_Sept07_Feb08.csv")
+tile1.4 <- tile1.4[,c(1:2)]
+Site.1 <- rbind(tile1.1, tile1.2, tile1.3, tile1.4)
+
+tile2.1 <- read.csv("Data/Tiles2_1_905381_Jan06_Sept06.csv")
+tile2.1 <- tile2.1[,c(1:2)]
+tile2.2 <- read.csv("Data/Tiles2_2_905384_Jan07_Sept07.csv")
+tile2.2 <- tile2.2[,c(1:2)]
+Site.2 <- rbind(tile1.1, tile1.2)
+
+tile3.1 <- read.csv("Data/Tiles3_1_905385_Jan06_Sept06.csv")
+tile3.1 <- tile3.1[,c(1:2)]
+tile3.2 <- read.csv("Data/Tiles3_2_905382_Sept06_Jan07.csv")
+tile3.2 <- tile3.2[,c(1:2)]
+tile3.3 <- read.csv("Data/Tiles3_3_905381_Jan07_Sept07.csv")
+tile3.3 <- tile3.3[,c(1:2)]
+tile3.4 <- read.csv("Data/Tiles3_4_905379_Sept07_Feb08.csv")
+tile3.4 <- tile3.4[,c(1:2)]
+Site.3 <- rbind(tile3.1, tile3.2, tile3.3, tile3.4)
+
+tile7.1 <- read.csv("Data/Tiles7_1_905376_Jan06_Sept06.csv")
+tile7.1 <- tile7.1[,c(1:2)]
+tile7.2 <- read.csv("Data/Tiles7_2_905383_Sept06_Jan07.csv")
+tile7.2 <- tile7.2[,c(1:2)]
+tile7.3 <- read.csv("Data/Tiles7_3_905377_Jan07_Sept07.csv")
+tile7.3 <- tile7.3[,c(1:2)]
+tile7.4 <- read.csv("Data/Tiles7_4_905376_Sept07_Feb08.csv")
+tile7.4 <- tile7.4[,c(1:2)]
+Site.7 <- rbind(tile7.1, tile7.2, tile7.3, tile7.4)
+
+tile8.1 <- read.csv("Data/Tiles8_1_905383_Jan06_Sept06.csv")
+tile8.1 <- tile8.1[,c(1:2)]
+tile8.2 <- read.csv("Data/Tiles8_2_905379_Sept06_Jan07.csv")
+tile8.2 <- tile8.2[,c(1:2)]
+tile8.3 <- read.csv("Data/Tiles8_3_905385_Sept07_Feb08.csv")
+tile8.3 <- tile8.3[,c(1:2)]
+Site.8 <- rbind(tile8.1, tile8.2, tile8.3)
+
+tile9.1 <- read.csv("Data/Tiles9_1_905384_Jan06_Sept06.csv")
+tile9.1 <- tile9.1[,c(1:2)]
+tile9.2 <- read.csv("Data/Tiles9_2_905381_Sept06_Jan07.csv")
+tile9.2 <- tile9.2[,c(1:2)]
+tile9.3 <- read.csv("Data/Tiles9_3_818724_Jan07_Sept07.csv")
+tile9.3 <- tile9.3[,c(1:2)]
+tile9.4 <- read.csv("Data/Tiles9_4_905378_Sept07_Feb08.csv")
+tile9.4 <- tile9.4[,c(1:2)]
+Site.9 <- rbind(tile9.1, tile9.2, tile9.3, tile9.4)
+
+temp <- merge(Site.1, Site.2,  by='Date.Time', all=T)
+temp <- merge(temp, Site.3,  by='Date.Time', all=T)
+temp <- merge(temp, Site.7,  by='Date.Time', all=T)
+temp <- merge(temp, Site.8,  by='Date.Time', all=T)
+temp <- merge(temp, Site.9,  by='Date.Time', all=T)
+colnames(temp) <- c("Date.Time", "Site.1", "Site.2", "Site.3", "Site.7", "Site.8", "Site.9")
+
 temp$Date.Time <- as.POSIXct(temp$Date.Time, format="%m/%d/%y %T", tz="Pacific/Tahiti")
 
 # Plot temperature distributions for each site
@@ -180,14 +245,15 @@ with(temp.summ, {
   par(mar=c(3,4,6,1), mfrow=c(1,1))
   plot(NA, xaxt="n", xlim=c(1,6), ylim=c(1,6), xlab="", ylab="Rank Order")
   axis(side=1, at=1:6, labels = rownames(temp.summ))
+  lines(rank(mean), type="b", pch=15, col="gray")
   lines(rank(var), type="b", pch=5, col="green")
   lines(rank(skew), type="b", pch=2, col="blue")
   lines(rank(kurt), type="b", pch=4, col="purple")
   lines(rank(hflat), type="b", pch=6, col="black")
   lines(rank(dip), type="b", pch=7, col="pink")
-  legend("top", legend=c("variance", "skewness", "kurtosis", "hyperflatness", "bimodality"),
-         lty=1, col=c("green", "blue", "purple", "black", "pink"),
-         pch=c(5,2,4,6,7), inset=c(0,-0.4), xpd=NA)
+  legend("top", legend=c("mean", "variance", "skewness", "kurtosis", "hyperflatness", "bimodality"),
+         lty=1, col=c("gray", "green", "blue", "purple", "black", "pink"),
+         pch=c(15,5,2,4,6,7), inset=c(0,-0.4), xpd=NA)
 })
 ```
 
