@@ -15,5 +15,5 @@ stable_sort:True
 stepwords:8
 suppress_sort:True
 word_length:8
-Num OTUs:19885
+Num OTUs:19455
 Result path: Bioinf/clust100/Moorea_seqs_otus.txt
