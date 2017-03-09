@@ -2,9 +2,6 @@
 .Rhistory
 .Rapp.history
 
-# Session Data files
-.RData
-
 # Example code in package build process
 *-Ex.R
 
@@ -44,6 +41,12 @@ Yost_1944FFasta/
 Bioinf/Moorea_seqs.fasta
 Bioinf/clust/*
 !Bioinf/clust/97_otus_bysample.tsv
+!Bioinf/clust/poorseqs.fasta
+!Bioinf/clust/poorseqs_blast_results.txt
+Bioinf/clust100/*
+!Bioinf/clust/100_otus.tsv
+!Bioinf/clust/poorseqs.fasta
+!Bioinf/clust/poorseqs_blast_results.txt
 
 *.swp
 
@@ -51,3 +54,4 @@ Bioinf/clust/*
 *.log
 
 
+.Rproj.user
