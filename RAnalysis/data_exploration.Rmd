@@ -288,6 +288,10 @@ temp <- as.data.frame((temp.summ[,c(1:12)]))
 pca.temp <- prcomp(temp, scale=TRUE) # Run PCA
 biplot(pca.temp) #Plot PCA results on a biplot
 PCA1 <- data.frame(PCA1 = prcomp(temp, scale=TRUE)$x[,1]) # Extract the first principal component
+PCA2 <- data.frame(PCA2 = prcomp(temp, scale=TRUE)$x[,2]) # Extract the second principal component
+PCA3 <- data.frame(PCA3 = prcomp(temp, scale=TRUE)$x[,3]) # Extract the second principal component
+PCA <- cbind(PCA1,PCA2,PCA3)
+plot(PCA1,PCA2,title="Temperature: PCA1 and PCA2")
 
 # Append PCA1 as a new phy.f sample data column
 sample_data(phy.f)$PCA1 <- sample_data(phy.f)$Site
