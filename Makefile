@@ -43,7 +43,12 @@ Bioinf/clust100/100_otus_rep_set.fasta: Bioinf/Moorea_seqs_trimmed.fasta
 	~/SymITS2/otus_100.sh $< Bioinf/clust100
 
 # Trim adapters and barcodes
-cutadapt -g GTGAATTGCAGAACTCCGTG -e 0.15 -O 18 --discard-untrimmed Moorea_seqs.fasta -o Moorea_seqs_trimF.fasta	
-cutadapt -g GTGAATTGCAGAACTCCGTG -e 0.15 -O 18 Moorea_seqs_trimF.fasta	 -o Moorea_seqs_trimF2.fasta	
-cutadapt -a AAGCATATAAGTAAGCGGAGG -e 0.15 -O 18 Moorea_seqs_trimF2.fasta -o Moorea_seqs_trimF2_trimR.fasta
-cutadapt -a AAGCATATAAGTAAGCGGAGG -e 0.15 -O 18 Moorea_seqs_trimF2_trimR.fasta -o Moorea_seqs_trimmed.fasta
+Bioinf/Moorea_seqs_trimmed.fasta: Bioinf/Moorea_seqs.fasta
+	cutadapt -g GTGAATTGCAGAACTCCGTG -e 0.15 -O 18 --discard-untrimmed Bioinf/Moorea_seqs.fasta -o Bioinf/Moorea_seqs_trimF.fasta	
+	cutadapt -g GTGAATTGCAGAACTCCGTG -e 0.15 -O 18 Bioinf/Moorea_seqs_trimF.fasta	 -o Bioinf/Moorea_seqs_trimF2.fasta	
+	cutadapt -a AAGCATATAAGTAAGCGGAGG -e 0.15 -O 18 Bioinf/Moorea_seqs_trimF2.fasta -o Bioinf/Moorea_seqs_trimF2_trimR.fasta
+	cutadapt -a AAGCATATAAGTAAGCGGAGG -e 0.15 -O 18 Bioinf/Moorea_seqs_trimF2_trimR.fasta -o Bioinf/Moorea_seqs_trimmed.fasta
+
+# Uncompress sequences
+Moorea_seqs.fasta: Moorea_seqs.tar.gz
+	tar -xzvf Moorea_seqs.tar.gz -m
