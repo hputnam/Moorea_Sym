@@ -13,7 +13,7 @@ taxcolors <- matrix(c("#8dd3c7", "#bebada", "#fb8072"),
 
 options(stringsAsFactors = FALSE)
 
-load("Data/Moorea_sym.RData")  # loads phyloseq object named phy.f
+# load("Data/Moorea_sym.RData")  # loads phyloseq object named phy.f
 
 # Filter OTUs by minimum count
 # Set threshold count
@@ -255,5 +255,32 @@ with(temp.summ, {
          lty=1, col=c("gray", "green", "blue", "purple", "black", "pink"),
          pch=c(15,5,2,4,6,7), inset=c(0,-0.4), xpd=NA)
 })
+
+# PCA of various metrics
+temp <- as.data.frame((temp.summ[,c(1:12)]))
+pca.temp <- prcomp(temp, scale=TRUE) # Run PCA
+biplot(pca.temp) #Plot PCA results on a biplot
+PCA1 <- data.frame(PCA1 = prcomp(temp, scale=TRUE)$x[,1]) # Extract the first principal component
+
+# Append PCA1 as a new phy.f sample data column
+sample_data(phy.f)$PCA1 <- sample_data(phy.f)$Site
+sample_data(phy.f)$PCA1 <- gsub(" Site 1",PCA1[1,1],as.character(data.frame(sample_data(phy.f))$PCA1))
+sample_data(phy.f)$PCA1 <- gsub(" Site 2",PCA1[2,1],as.character(data.frame(sample_data(phy.f))$PCA1))
+sample_data(phy.f)$PCA1 <- gsub(" Site 3",PCA1[3,1],as.character(data.frame(sample_data(phy.f))$PCA1))
+sample_data(phy.f)$PCA1 <- gsub(" Site 7",PCA1[4,1],as.character(data.frame(sample_data(phy.f))$PCA1))
+sample_data(phy.f)$PCA1 <- gsub(" Site 8",PCA1[5,1],as.character(data.frame(sample_data(phy.f))$PCA1))
+sample_data(phy.f)$PCA1 <- gsub(" Site 9",PCA1[6,1],as.character(data.frame(sample_data(phy.f))$PCA1))
+```
+
+# Multivariate analyses
+```{r, echo=FALSE, include=TRUE}
+# Create a distance matrix from phy.f
+vd <- vegdist(t(data.frame(otu_table(phy.f))),method="bray")
+
+# Use phyloseq wrapper for capscale to conduct distance-based RDA
+phy.f.CAP <- ordinate(phy.f,method="CAP",distance="bray",formula=~PCA1)
+phy.f.CAP # Print ordination results
+p1 = plot_ordination(phy.f, phy.f.CAP, type="taxa", color="Phylum", title="taxa")
+print(p1)
 ```
 
