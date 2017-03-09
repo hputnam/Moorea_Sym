@@ -316,6 +316,10 @@ p1 = plot_ordination(phy.f, phy.f.CAP, type="taxa", color="Phylum", title="taxa"
 print(p1)
 
 ord <- ordinate(phy.f, "NMDS", distance = "bray")
-plot_ordination(phy.f, ord)
+plot_ordination(phy.f, ord, type="subtype", color="Species")
+
+
+
 ```
+
 
