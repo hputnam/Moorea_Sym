@@ -206,6 +206,21 @@ tile9.4 <- read.csv("Data/Tiles9_4_905378_Sept07_Feb08.csv")
 tile9.4 <- tile9.4[,c(1:2)]
 Site.9 <- rbind(tile9.1, tile9.2, tile9.3, tile9.4)
 
+MCR.1 <- read.csv("Data/MCR_LTER01_BottomMountThermistors_20150818.csv")
+MCR.1 <- subset(MCR.1, reef_type_code=="BAK")
+strt <- which(MCR.1$time_local == "2006-01-29 00:00:00")
+end <- which(MCR.1$time_local == "2009-02-20 00:00:00")
+MCR.1 <- MCR.1[c(strt:end),c(2,7)]
+
+MCR.6 <- read.csv("Data/MCR_LTER06_BottomMountThermistors_20150818.csv")
+MCR.6 <- subset(MCR.6, reef_type_code=="BAK")
+strt <- which(MCR.6$time_local == "2006-04-09 10:20:00")
+end <- which(MCR.6$time_local == "2009-02-20 00:00:00")
+MCR.6 <- MCR.6[c(strt:end),c(2,7)]
+MCR.temp <- merge(MCR.1, MCR.6, by="time_local", all=T)
+colnames(MCR.temp) <- c("Date.Time", "MCR1", "MCR6")
+MCR.temp$Date.Time <- as.POSIXct(strptime(MCR.temp$Date.Time, format="%Y-%m-%d %H:%M:%S", tz="Pacific/Tahiti"))
+
 temp <- merge(Site.1, Site.2,  by='Date.Time', all=T)
 temp <- merge(temp, Site.3,  by='Date.Time', all=T)
 temp <- merge(temp, Site.7,  by='Date.Time', all=T)
@@ -215,14 +230,26 @@ colnames(temp) <- c("Date.Time", "Site.1", "Site.2", "Site.3", "Site.7", "Site.8
 
 temp$Date.Time <- as.POSIXct(temp$Date.Time, format="%m/%d/%y %T", tz="Pacific/Tahiti")
 
+temp.all <- merge(temp, MCR.temp, by='Date.Time', all=T)
+plot(temp.all$Date.Time, temp.all$Site.1, pch=15, col="darkred", cex=0.1, xlab="Time", ylab="Temperature °C")
+points(temp.all$Date.Time, temp.all$Site.2, pch=15, col="red", cex=0.1)
+points(temp.all$Date.Time, temp.all$Site.3, pch=15, col="pink", cex=0.1)
+points(temp.all$Date.Time, temp.all$Site.7, pch=15, col="darkblue", cex=0.1)
+points(temp.all$Date.Time, temp.all$Site.8, pch=15, col="blue", cex=0.1)
+points(temp.all$Date.Time, temp.all$Site.9, pch=15, col="lightblue", cex=0.1)
+points(temp.all$Date.Time, temp.all$MCR1, pch=15, col="gray", cex=0.1)
+points(temp.all$Date.Time, temp.all$MCR6, pch=15, col="black", cex=0.1)
+
 # Plot temperature distributions for each site
-par(mfrow=c(2,3), mar=c(3,3,2,2), mgp=c(1.5,0.1,0), tcl=-0.2)
+par(mfrow=c(2,4), mar=c(3,3,2,2), mgp=c(1.5,0.1,0), tcl=-0.2)
 hist(temp$Site.1, xlim=c(26.5,31.5), breaks=20, main="Site 1", xlab="Temp °C")
 hist(temp$Site.2, xlim=c(26.5,31.5), breaks=20, main="Site 2", xlab="Temp °C")
 hist(temp$Site.3, xlim=c(26.5,31.5), breaks=20, main="Site 3", xlab="Temp °C")
 hist(temp$Site.7, xlim=c(26.5,31.5), breaks=20, main="Site 7", xlab="Temp °C")
 hist(temp$Site.8, xlim=c(26.5,31.5), breaks=20, main="Site 8", xlab="Temp °C")
 hist(temp$Site.9, xlim=c(26.5,31.5), breaks=20, main="Site 9", xlab="Temp °C")
+hist(temp.all$MCR1, xlim=c(26.5,31.5), breaks=20, main="MCR1", xlab="Temp °C")
+hist(temp.all$MCR6, xlim=c(26.5,31.5), breaks=20, main="MCR6", xlab="Temp °C")
 
 # Calculate summary statistics for each site
 temp.summ <- data.frame(mean=apply(temp[,2:7], 2, FUN=mean, na.rm=T),
