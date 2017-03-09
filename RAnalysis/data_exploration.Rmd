@@ -305,6 +305,7 @@ sample_data(phy.f)$PCA1 <- gsub(" Site 9",PCA1[6,1],as.character(data.frame(samp
 
 # Multivariate analyses
 ```{r, echo=FALSE, include=TRUE}
+library(vegan)
 # Create a distance matrix from phy.f
 vd <- vegdist(t(data.frame(otu_table(phy.f))),method="bray")
 
