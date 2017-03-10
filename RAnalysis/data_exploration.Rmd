@@ -59,7 +59,7 @@ phy.f.p <- transform_sample_counts(phy.f, function(x) x/sum(x))
 transform <- function(x) sqrt(x/sum(x))  # Set transformation function
 phy.f.t <- transform_sample_counts(phy.f, transform)  # Transform data
 
-plot_bar(phy.f)
+plot_bar(phy.f.p, fill="Subtype", facet_grid=~Species)
 
 ```
 
@@ -316,7 +316,7 @@ p1 = plot_ordination(phy.f, phy.f.CAP, type="taxa", color="Phylum", title="taxa"
 print(p1)
 
 ord <- ordinate(phy.f, "NMDS", distance = "bray")
-plot_ordination(phy.f, ord, type="subtype", color="Species")
+plot_ordination(phy.f, ord, type="Clade", color="Species", shape="Site")
 
 
 
