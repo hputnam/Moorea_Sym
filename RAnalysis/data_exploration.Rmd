@@ -315,8 +315,8 @@ phy.f.CAP # Print ordination results
 p1 = plot_ordination(phy.f, phy.f.CAP, type="taxa", color="Phylum", title="taxa")
 print(p1)
 
-ord <- ordinate(phy.f, "NMDS", distance = "bray")
-plot_ordination(phy.f, ord, type="Clade", color="Species", shape="Site")
+ord <- ordinate(phy.f.p, "NMDS", distance = "bray")
+plot_ordination(phy.f.p, ord, type="Clade", color="Species", shape="Site")
 
 
 
