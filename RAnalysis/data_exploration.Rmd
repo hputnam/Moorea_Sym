@@ -283,13 +283,19 @@ with(temp.summ, {
          pch=c(15,5,2,4,6,7), inset=c(0,-0.4), xpd=NA)
 })
 
+```
+
+```{r, echo=FALSE}
 # PCA of various metrics
 temp <- as.data.frame((temp.summ[,c(1:12)]))
 pca.temp <- prcomp(temp, scale=TRUE) # Run PCA
+summary(pca.temp)
+plot(pca.temp)
 biplot(pca.temp) #Plot PCA results on a biplot
 PCA1 <- data.frame(PCA1 = prcomp(temp, scale=TRUE)$x[,1]) # Extract the first principal component
 PCA2 <- data.frame(PCA2 = prcomp(temp, scale=TRUE)$x[,2]) # Extract the second principal component
-PCA3 <- data.frame(PCA3 = prcomp(temp, scale=TRUE)$x[,3]) # Extract the second principal component
+PCA3 <- data.frame(PCA3 = prcomp(temp, scale=TRUE)$x[,3]) # Extract the third principal component
+PCA4 <- data.frame(PCA4 = prcomp(temp, scale=TRUE)$x[,4]) # Extract the fourth principal component
 PCA <- cbind(PCA1,PCA2,PCA3)
 plot(PCA$PCA1,PCA$PCA2,main="Temperature: PCA1 and PCA2")
 
@@ -301,25 +307,76 @@ sample_data(phy.f)$PCA1 <- gsub(" Site 3",PCA1[3,1],as.character(data.frame(samp
 sample_data(phy.f)$PCA1 <- gsub(" Site 7",PCA1[4,1],as.character(data.frame(sample_data(phy.f))$PCA1))
 sample_data(phy.f)$PCA1 <- gsub(" Site 8",PCA1[5,1],as.character(data.frame(sample_data(phy.f))$PCA1))
 sample_data(phy.f)$PCA1 <- gsub(" Site 9",PCA1[6,1],as.character(data.frame(sample_data(phy.f))$PCA1))
+# Append PCA2 as a new phy.f sample data column
+sample_data(phy.f)$PCA2 <- sample_data(phy.f)$Site
+sample_data(phy.f)$PCA2 <- gsub(" Site 1",PCA2[1,1],as.character(data.frame(sample_data(phy.f))$PCA2))
+sample_data(phy.f)$PCA2 <- gsub(" Site 2",PCA2[2,1],as.character(data.frame(sample_data(phy.f))$PCA2))
+sample_data(phy.f)$PCA2 <- gsub(" Site 3",PCA2[3,1],as.character(data.frame(sample_data(phy.f))$PCA2))
+sample_data(phy.f)$PCA2 <- gsub(" Site 7",PCA2[4,1],as.character(data.frame(sample_data(phy.f))$PCA2))
+sample_data(phy.f)$PCA2 <- gsub(" Site 8",PCA2[5,1],as.character(data.frame(sample_data(phy.f))$PCA2))
+sample_data(phy.f)$PCA2 <- gsub(" Site 9",PCA2[6,1],as.character(data.frame(sample_data(phy.f))$PCA2))
+# Append PCA3 as a new phy.f sample data column
+sample_data(phy.f)$PCA3 <- sample_data(phy.f)$Site
+sample_data(phy.f)$PCA3 <- gsub(" Site 1",PCA3[1,1],as.character(data.frame(sample_data(phy.f))$PCA3))
+sample_data(phy.f)$PCA3 <- gsub(" Site 2",PCA3[2,1],as.character(data.frame(sample_data(phy.f))$PCA3))
+sample_data(phy.f)$PCA3 <- gsub(" Site 3",PCA3[3,1],as.character(data.frame(sample_data(phy.f))$PCA3))
+sample_data(phy.f)$PCA3 <- gsub(" Site 7",PCA3[4,1],as.character(data.frame(sample_data(phy.f))$PCA3))
+sample_data(phy.f)$PCA3 <- gsub(" Site 8",PCA3[5,1],as.character(data.frame(sample_data(phy.f))$PCA3))
+sample_data(phy.f)$PCA3 <- gsub(" Site 9",PCA3[6,1],as.character(data.frame(sample_data(phy.f))$PCA3))
+# Append PCA4 as a new phy.f sample data column
+sample_data(phy.f)$PCA4 <- sample_data(phy.f)$Site
+sample_data(phy.f)$PCA4 <- gsub(" Site 1",PCA4[1,1],as.character(data.frame(sample_data(phy.f))$PCA4))
+sample_data(phy.f)$PCA4 <- gsub(" Site 2",PCA4[2,1],as.character(data.frame(sample_data(phy.f))$PCA4))
+sample_data(phy.f)$PCA4 <- gsub(" Site 3",PCA4[3,1],as.character(data.frame(sample_data(phy.f))$PCA4))
+sample_data(phy.f)$PCA4 <- gsub(" Site 7",PCA4[4,1],as.character(data.frame(sample_data(phy.f))$PCA4))
+sample_data(phy.f)$PCA4 <- gsub(" Site 8",PCA4[5,1],as.character(data.frame(sample_data(phy.f))$PCA4))
+sample_data(phy.f)$PCA4 <- gsub(" Site 9",PCA4[6,1],as.character(data.frame(sample_data(phy.f))$PCA4))
+
 ```
 
 # Multivariate analyses
-```{r, echo=FALSE, include=TRUE}
+```{r, echo=FALSE}
 library(vegan)
 # Create a distance matrix from phy.f
-vd <- vegdist(t(data.frame(otu_table(phy.f))),method="bray")
+vd <- vegdist(t(data.frame(otu_table(phy.f.p))),method="bray")
 
 # Use phyloseq wrapper for capscale to conduct distance-based RDA
 phy.f.CAP <- ordinate(phy.f,method="CAP",distance="bray",formula=~PCA1)
 phy.f.CAP # Print ordination results
-p1 = plot_ordination(phy.f, phy.f.CAP, type="taxa", color="Phylum", title="taxa")
+p1 = plot_ordination(phy.f, phy.f.CAP, type="taxa", color="Clade", title="taxa")
 print(p1)
+p2 = plot_ordination(phy.f, phy.f.CAP, type="sample",color="Species")
+print(p2)
 
-ord <- ordinate(phy.f.p, "NMDS", distance = "bray")
-plot_ordination(phy.f.p, ord, type="Clade", color="Species", shape="Site")
+ord <- ordinate(phy.f, "NMDS", distance = "bray", trymax=100)
+plot_ordination(phy.f, ord)
+pcoa <- ordinate(phy.f.p, "PCoA", distance="bray", trymax=100)
+p3<-plot_ordination(phy.f, pcoa, type="sample", color="Species")
+print(p3)
+
+phy.f.por <- subset_samples(phy.f,Species=="Porties")
+ord2 <- ordinate(phy.f.por, "NMDS", distance = "bray", trymax=100)
+plot_ordination(phy.f.por, ord2)
+
+phy.f.por.no <- subset_samples(phy.f,DNA.ID!="209122")
+phy.f.por.122 <- subset_samples(phy.f,DNA.ID=="209122",prune=TRUE)
+phy.f.por.122 <- subset_taxa(phy.f.por.122,taxa_sums(phy.f.por.122)>0,prune=TRUE)
+
+phy.f.por.no.3 <- subset_samples(phy.f,DNA.ID!="209122")
+phy.f.por.no.3 <- subset_samples(phy.f.por.no.3,DNA.ID!="209100")
+phy.f.por.no.3 <- subset_samples(phy.f.por.no.3,DNA.ID!="209111")
+ord100 <- ordinate(phy.f.por.no.3,"PCoA", distance="bray",trymax=100)
+plot_ordination(phy.f.por.no.3,ord100,color="Species")
+
+ord4 <- ordinate(phy.f.por.no, "NMDS", distance = "bray", trymax=100)
+plot_ordination(phy.f.por.no, ord4,color="Site")
+ord5 <- ordinate(phy.f.por.no, "PCoA", distance = "bray", trymax=100)
+plot_ordination(phy.f.por.no, ord5,color="Site")
 
 
+phy.f.acr <- subset_samples(phy.f,Species=="Acropora")
+ord3 <- ordinate(phy.f.acr, "NMDS", distance = "bray", trymax=100)
+plot_ordination(phy.f.acr, ord3)
 
 ```
-
 
