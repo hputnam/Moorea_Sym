@@ -39,22 +39,16 @@ Site.1 <- join_all(list(tile1.1,tile1.2,tile1.3,tile1.4),by='Date.Time',type='fu
 colnames(Site.1)[2] <- "Site.1"
 # plot(Site.1$Date.Time,Site.1$Site.1)
 
-tile2.1 <- read.csv("Data/Tiles2_1_905381_Jan06_Sept06.csv")
-tile2.1 <- tile2.1[,c(1:2)]
-tile2.1$Date.Time <- as.POSIXct(tile2.1$Date.Time, format="%m/%d/%y %T", tz="Pacific/Tahiti")
-startday <- tile2.1$Date.Time[1] + days(1)
-endday <- max(tile2.1$Date.Time) - days(1)
-tile2.1 <- subset(tile2.1, tile2.1$Date.Time >= startday & tile2.1$Date.Time <= endday)
-
-tile2.2 <- read.csv("Data/Tiles2_2_905384_Jan07_Sept07.csv")
-tile2.2 <- tile2.2[,c(1:2)]
-tile2.2$Date.Time <- as.POSIXct(tile2.2$Date.Time, format="%m/%d/%y %T", tz="Pacific/Tahiti")
-startday <- tile2.2$Date.Time[1] + days(1)
-endday <- max(tile2.2$Date.Time) - days(1)
-tile2.2 <- subset(tile2.2, tile2.2$Date.Time >= startday & tile2.2$Date.Time <= endday)
-Site.2 <- join_all(list(tile2.1,tile2.2),by='Date.Time',type='full')
+tile2 <- read.csv("Data/MCR_LTER01_BottomMountThermistors_20150818.csv")
+tile2 <- subset(tile2 , reef_type_code=="BAK")
+colnames(tile2)[2] <- "Date.Time"
+tile2$Date.Time <- as.POSIXct(tile2$Date.Time, format="%Y-%m-%d %T", tz="Pacific/Tahiti")
+startday <- as.POSIXct("2006-01-29 00:00:00") + days(1)
+endday <- as.POSIXct("2009-02-20 00:00:00") - days(1)
+Site.2 <- subset(tile2, tile2$Date.Time > startday & tile2$Date.Time < endday)
+Site.2 <- Site.2 [,c(2,7)]
 colnames(Site.2)[2] <- "Site.2"
-# plot(Site.2$Date.Time,Site.2$Site.2)
+plot(Site.2$Date.Time,Site.2$Site.2)
 
 tile3.1 <- read.csv("Data/Tiles3_1_905385_Jan06_Sept06.csv")
 tile3.1 <- tile3.1[,c(1:2)]
@@ -173,16 +167,16 @@ Site.9 <- join_all(list(tile9.1,tile9.2,tile9.3,tile9.4),by='Date.Time',type='fu
 colnames(Site.9)[2] <- "Site.9"
 # plot(Site.9$Date.Time,Site.9$Site.9)
 
-MCR.1 <- read.csv("Data/MCR_LTER01_BottomMountThermistors_20150818.csv")
-MCR.1 <- subset(MCR.1, reef_type_code=="BAK")
-colnames(MCR.1)[2] <- "Date.Time"
-MCR.1$Date.Time <- as.POSIXct(MCR.1$Date.Time, format="%Y-%m-%d %T", tz="Pacific/Tahiti")
-startday <- as.POSIXct("2006-01-29 00:00:00") + days(1)
-endday <- as.POSIXct("2009-02-20 00:00:00") - days(1)
-MCR.1 <- subset(MCR.1, MCR.1$Date.Time > startday & MCR.1$Date.Time < endday)
-MCR.1 <- MCR.1[,c(2,7)]
-colnames(MCR.1)[2] <- "MCR1"
-# plot(MCR.1$Date.Time,MCR.1$MCR1)
+# MCR.1 <- read.csv("Data/MCR_LTER01_BottomMountThermistors_20150818.csv")
+# MCR.1 <- subset(MCR.1, reef_type_code=="BAK")
+# colnames(MCR.1)[2] <- "Date.Time"
+# MCR.1$Date.Time <- as.POSIXct(MCR.1$Date.Time, format="%Y-%m-%d %T", tz="Pacific/Tahiti")
+# startday <- as.POSIXct("2006-01-29 00:00:00") + days(1)
+# endday <- as.POSIXct("2009-02-20 00:00:00") - days(1)
+# MCR.1 <- subset(MCR.1, MCR.1$Date.Time > startday & MCR.1$Date.Time < endday)
+# MCR.1 <- MCR.1[,c(2,7)]
+# colnames(MCR.1)[2] <- "MCR1"
+# # plot(MCR.1$Date.Time,MCR.1$MCR1)
 
 MCR.6 <- read.csv("Data/MCR_LTER06_BottomMountThermistors_20150818.csv")
 MCR.6 <- subset(MCR.6, reef_type_code=="BAK")
@@ -195,9 +189,12 @@ MCR.6 <- MCR.6[,c(2,7)]
 colnames(MCR.6)[2] <- "MCR6"
 # plot(MCR.6$Date.Time,MCR.6$MCR6)
 
-MCR.temp <- merge(MCR.1, MCR.6, by="Date.Time", all=T)
+#MCR.temp <- MCR.6
 
-temp.all <- join_all(list(Site.1,Site.2,Site.3,Site.7,Site.8,Site.9,MCR.1,MCR.6),by="Date.Time",type='full')
+temp.all <- join_all(list(Site.1,Site.2,Site.3,Site.7,Site.8,Site.9),by="Date.Time",type='full')
+
+#remove lines where data is not found for all sites
+temp.all <- na.omit(temp.all)
 
 # Calculate summary statistics for each site
 temp.summ <- data.frame(mean=apply(temp.all[,2:7], 2, FUN=mean, na.rm=T),

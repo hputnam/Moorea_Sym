@@ -147,25 +147,25 @@ composition(phy.f.p, col=rainbow(ntaxa(phy.f.p)), legend=T)
 ```{r tempdata}
 
 # Plot temperature data
-plot(temp.all$Date.Time, temp.all$Site.1, pch=15, col="darkred", cex=0.1, xlab="Time", ylab="Temperature °C",ylim=c(24,32))
+plot(temp.all$Date.Time, temp.all$Site.1, pch=15, col="darkred", cex=0.1, xlab="Time", ylab="Temperature Â°C",ylim=c(24,32))
 points(temp.all$Date.Time, temp.all$Site.2, pch=15, col="red", cex=0.1)
 points(temp.all$Date.Time, temp.all$Site.3, pch=15, col="pink", cex=0.1)
 points(temp.all$Date.Time, temp.all$Site.7, pch=15, col="darkblue", cex=0.1)
 points(temp.all$Date.Time, temp.all$Site.8, pch=15, col="blue", cex=0.1)
 points(temp.all$Date.Time, temp.all$Site.9, pch=15, col="lightblue", cex=0.1)
-points(temp.all$Date.Time, temp.all$MCR1, pch=15, col="gray", cex=0.1)
-points(temp.all$Date.Time, temp.all$MCR6, pch=15, col="black", cex=0.1)
+#points(temp.all$Date.Time, temp.all$MCR1, pch=15, col="gray", cex=0.1)
+#points(temp.all$Date.Time, temp.all$MCR6, pch=15, col="black", cex=0.1)
 
 # Plot temperature distributions for each site
 par(mfrow=c(2,4), mar=c(3,3,2,2), mgp=c(1.5,0.1,0), tcl=-0.2)
-hist(temp.all$Site.1, xlim=c(26.5,31.5), breaks=20, main="Site 1", xlab="Temp °C")
-hist(temp.all$Site.2, xlim=c(26.5,31.5), breaks=20, main="Site 2", xlab="Temp °C")
-hist(temp.all$Site.3, xlim=c(26.5,31.5), breaks=20, main="Site 3", xlab="Temp °C")
-hist(temp.all$Site.7, xlim=c(26.5,31.5), breaks=20, main="Site 7", xlab="Temp °C")
-hist(temp.all$Site.8, xlim=c(26.5,31.5), breaks=20, main="Site 8", xlab="Temp °C")
-hist(temp.all$Site.9, xlim=c(26.5,31.5), breaks=20, main="Site 9", xlab="Temp °C")
-hist(temp.all$MCR1, xlim=c(26.5,31.5), breaks=20, main="MCR1", xlab="Temp °C")
-hist(temp.all$MCR6, xlim=c(26.5,31.5), breaks=20, main="MCR6", xlab="Temp °C")
+hist(temp.all$Site.1, xlim=c(26.5,31.5), breaks=20, main="Site 1", xlab="Temp ?C")
+hist(temp.all$Site.2, xlim=c(26.5,31.5), breaks=20, main="Site 2", xlab="Temp ?C")
+hist(temp.all$Site.3, xlim=c(26.5,31.5), breaks=20, main="Site 3", xlab="Temp ?C")
+hist(temp.all$Site.7, xlim=c(26.5,31.5), breaks=20, main="Site 7", xlab="Temp ?C")
+hist(temp.all$Site.8, xlim=c(26.5,31.5), breaks=20, main="Site 8", xlab="Temp ?C")
+hist(temp.all$Site.9, xlim=c(26.5,31.5), breaks=20, main="Site 9", xlab="Temp ?C")
+#hist(temp.all$MCR1, xlim=c(26.5,31.5), breaks=20, main="MCR1", xlab="Temp ?C")
+#hist(temp.all$MCR6, xlim=c(26.5,31.5), breaks=20, main="MCR6", xlab="Temp ?C")
 
 # Plot rank order of various metrics
 with(temp.summ, {
