@@ -27,7 +27,7 @@ phy.f <- prune_taxa(names(taxa), phy.f)
 
 # Filter samples by minimum count
 # Set threshold number of reads
-sn <- 100
+sn <- 300
 # Remove samples with fewer reads than threshold
 phy.f <- prune_samples(sample_sums(phy.f)>=sn, phy.f)
 
@@ -260,21 +260,11 @@ phy.f.por <- subset_samples(phy.f,Species=="Porties")
 ord2 <- ordinate(phy.f.por, "NMDS", distance = "bray", trymax=100)
 plot_ordination(phy.f.por, ord2)
 
-phy.f.por.no <- subset_samples(phy.f,DNA.ID!="209122")
-phy.f.por.122 <- subset_samples(phy.f,DNA.ID=="209122",prune=TRUE)
-phy.f.por.122 <- subset_taxa(phy.f.por.122,taxa_sums(phy.f.por.122)>0,prune=TRUE)
-
 phy.f.por.no.3 <- subset_samples(phy.f,DNA.ID!="209122")
 phy.f.por.no.3 <- subset_samples(phy.f.por.no.3,DNA.ID!="209100")
 phy.f.por.no.3 <- subset_samples(phy.f.por.no.3,DNA.ID!="209111")
 ord100 <- ordinate(phy.f.por.no.3,"PCoA", distance="bray",trymax=100)
 plot_ordination(phy.f.por.no.3,ord100,color="Species")
-
-ord4 <- ordinate(phy.f.por.no, "NMDS", distance = "bray", trymax=100)
-plot_ordination(phy.f.por.no, ord4,color="Site")
-ord5 <- ordinate(phy.f.por.no, "PCoA", distance = "bray", trymax=100)
-plot_ordination(phy.f.por.no, ord5,color="Site")
-
 
 phy.f.acr <- subset_samples(phy.f,Species=="Acropora")
 ord3 <- ordinate(phy.f.acr, "NMDS", distance = "bray", trymax=100)
