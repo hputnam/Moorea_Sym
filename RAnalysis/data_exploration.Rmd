@@ -7,6 +7,7 @@ output: html_document
 
 ```{r load}
 library(phyloseq)
+options(stringsAsFactors = FALSE)
 
 taxcolors <- matrix(c("#8dd3c7", "#bebada", "#fb8072"), 
                     dimnames=list(c("CladeA", "CladeC", "CladeD")))
@@ -308,71 +309,118 @@ sweep(aload, 2, colSums(aload), "/")
 # Evenness
 ```{r}
 # Calculate Shannon Index and Pielou's Evenness for each sample
-H <- diversity(t(otu_table(phy.f)))  # Shannon Index
-J <- H/log(specnumber(t(otu_table(phy.f))))  # Pielou's Evenness
+H <- diversity(t(otu_table(phy.f.p)))  # Shannon Index
+J <- H/log(specnumber(t(otu_table(phy.f.p))))  # Pielou's Evenness
 adiv <- cbind(data.frame(H), data.frame(J), sample_data(phy.f))
-# Test for differences in Pielou's evenness due to sample Type
+# Test for differences in Shannon index across species and sites
+shannon.aov <- aov(adiv$H ~ adiv$Species * adiv$Site)
+summary(shannon.aov)  # Significant Species effect
+# Test for differences in Pielou's evenness across species and sites
 pielou.aov <- aov(adiv$J ~ adiv$Species * adiv$Site)
-summary(pielou.aov)  # Pielou: significant Type effect
-print(TukeyHSD(pielou.aov))  # Pielou pairwise tests
-# Plot Pielou's evenness
+summary(pielou.aov)  # Pielou: significant Species effect
+
+# Plot diversity and evenness for Acropora
+par(mfrow=c(2,1))
 with(subset(adiv, Species=="Acropora"), {
+  boxplot(H ~ Site, ylim=c(0, 2), ylab="Pielou's Evenness",
+        outline=F, border="black",
+        main="Acropora Symbiodinium Diversity (Shannon)")
   boxplot(J ~ Site, ylim=c(0, 1), ylab="Pielou's Evenness",
         outline=F, border="black",
         main="Acropora Symbiodinium Evenness")
 })
-mod <- with(subset(adiv, Species=="Acropora"), lm(J ~ Site))
-anova(mod)  # No differences among sites
 
-adiv$grp <- ifelse(adiv$Site %in% c(" Site 1", " Site 2", " Site 3"), "123", "789")
-with(subset(adiv, Species=="Acropora"), {
-  boxplot(J ~ grp, ylim=c(0, 1), ylab="Pielou's Evenness",
-        outline=F, border="black",
-        main="Acropora Symbiodinium Evenness")
-})
-mod <- with(subset(adiv, Species=="Acropora"), lm(J ~ grp))
-anova(mod)  # No differences among site groups
-
+# Plot diversity and evenness for Porites
 with(subset(adiv, Species=="Porties"), {
-  boxplot(J ~ Site, ylim=c(0, 1), ylab="Pielou's Evenness",
+  boxplot(H ~ Site, ylim=c(0, 0.5), ylab="Shannon Index",
+        outline=F, border="black",
+        main="Porites Symbiodinium Diversity")
+  boxplot(J ~ Site, ylim=c(0, 0.5), ylab="Pielou's Evenness",
         outline=F, border="black",
         main="Porites Symbiodinium Evenness")
 })
-mod <- with(subset(adiv, Species=="Porties"), lm(J ~ Site))
-anova(mod)  # No differences among sites
-
-with(subset(adiv, Species=="Porties"), {
-  boxplot(J ~ grp, ylim=c(0, 1), ylab="Pielou's Evenness",
-        outline=F, border="black",
-        main="Porites Symbiodinium Evenness")
-})
-mod <- with(subset(adiv, Species=="Porties"), lm(J ~ grp))
-anova(mod)  # No differences among site groups
 
 ```
 
-# Does evenness correlate with temperature regimes across sites?
+# Do diversity and evenness correlate with temperature regimes across sites?
 ```{r}
+porites.diversity <- with(subset(adiv, Species=="Porties"), aggregate(H, list(Site), FUN=mean, na.rm=T))
 porites.evenness <- with(subset(adiv, Species=="Porties"), aggregate(J, list(Site), FUN=mean, na.rm=T))
+acropora.diversity <- with(subset(adiv, Species=="Acropora"), aggregate(H, list(Site), FUN=mean, na.rm=T))
 acropora.evenness <- with(subset(adiv, Species=="Acropora"), aggregate(J, list(Site), FUN=mean, na.rm=T))
 
-plot(pca.temp$x[,1], porites.evenness$x, ylim=c(0,0.5), main="Evenness vs. Temp. PC1")
+par(mfrow=c(2,1))
+plot(pca.temp$x[,1], porites.diversity$x, ylim=c(0,1), main="Diversity vs. Temp. PC1")
+points(pca.temp$x[,1], acropora.diversity$x, col="red")
+plot(pca.temp$x[,1], porites.evenness$x, ylim=c(0,0.6), main="Evenness vs. Temp. PC1")
 points(pca.temp$x[,1], acropora.evenness$x, col="red")
-legend("topleft", legend=c("Acropora", "Porites"), col=c("red", "black"), pch=21)
+#legend("topleft", legend=c("Acropora", "Porites"), col=c("red", "black"), pch=21)
 
-mod <- lm(porites.evenness$x ~ pca.temp$x[,1])
-anova(mod)
-mod <- lm(acropora.evenness$x ~ pca.temp$x[,1])
-anova(mod)
-
-plot(pca.temp$x[,2], porites.evenness$x, ylim=c(0,0.5), main="Evenness vs. Temp. PC2")
+par(mfrow=c(2,1))
+plot(pca.temp$x[,2], porites.diversity$x, ylim=c(0,1), main="Diversity vs. Temp. PC2")
+points(pca.temp$x[,2], acropora.diversity$x, col="red")
+plot(pca.temp$x[,2], porites.evenness$x, ylim=c(0,0.6), main="Evenness vs. Temp. PC2")
 points(pca.temp$x[,2], acropora.evenness$x, col="red")
-legend("topleft", legend=c("Acropora", "Porites"), col=c("red", "black"), pch=21)
+#legend("topleft", legend=c("Acropora", "Porites"), col=c("red", "black"), pch=21)
 
-plot(pca.temp$x[,3], porites.evenness$x, ylim=c(0,0.5), main="Evenness vs. Temp. PC3")
+par(mfrow=c(2,1))
+plot(pca.temp$x[,3], porites.diversity$x, ylim=c(0,1), main="Diversity vs. Temp. PC3")
+points(pca.temp$x[,3], acropora.diversity$x, col="red")
+plot(pca.temp$x[,3], porites.evenness$x, ylim=c(0,0.6), main="Evenness vs. Temp. PC3")
 points(pca.temp$x[,3], acropora.evenness$x, col="red")
-legend("topleft", legend=c("Acropora", "Porites"), col=c("red", "black"), pch=21)
+#legend("topleft", legend=c("Acropora", "Porites"), col=c("red", "black"), pch=21)
 
 ```
 
 ##### Evenness does not appear to differ among sites for either species and shows no relationship with temperature regimes
+
+### Does number of clades correspond to temperature regime?
+```{r}
+# Get and count clades present in each sample
+sample_data(phy.f) <- within(sample_data(phy.f), {
+  clades <- apply(data.frame(otu_table(phy.f), check.names=F), 2, function(x) {
+    unique(data.frame(tax_table(phy.f))[names(which(x!=0)), "Clade"])
+  })
+  nclades <- sapply(clades, length)
+})
+
+# Plot number of clades across sites
+with(subset(sample_data(phy.f), Species=="Porties"), plot(nclades ~ Site, main = "Number of clades in Porites"))
+with(subset(sample_data(phy.f), Species=="Acropora"), plot(nclades ~ Site, main="Number of clades in Acropora"))
+```
+
+### Does abundance of clade D correspond to temperature regime?
+```{r}
+# Test if abundance of clade D correlates with temp regime
+cladeAbund <- apply(otu_table(phy.f.p), 2, function(x) aggregate(x, by=list(Clade=data.frame(tax_table(phy.f.p))$Clade), FUN=sum)$x)
+rownames(cladeAbund) <- c("A", "C", "D")
+
+sample_data(phy.f.p) <- within(sample_data(phy.f.p), {
+  A <- t(cladeAbund)[, "A"]
+  C <- t(cladeAbund)[, "C"]
+  D <- t(cladeAbund)[, "D"]
+  PC1 <- sample_data(phy.f)$PCA1
+  PC2 <- sample_data(phy.f)$PCA2
+  PC3 <- sample_data(phy.f)$PCA3
+})
+
+with(subset(sample_data(phy.f.p), Species=="Porties"), {
+  par(mfrow=c(1,3))
+  plot(D ~ PC1)
+  plot(D ~ PC2)
+  plot(D ~ PC3)
+})
+
+cor(apply(data.frame(subset(sample_data(phy.f.p), Species=="Porties")[, c("D", "PC1", "PC2", "PC3")]), 2, as.numeric))
+     
+with(subset(sample_data(phy.f.p), Species=="Acropora"), {
+  par(mfrow=c(1,3))
+  plot(D ~ PC1)
+  plot(D ~ PC2)
+  plot(D ~ PC3)
+})
+
+cor(apply(data.frame(subset(sample_data(phy.f.p), Species=="Acropora")[, c("D", "PC1", "PC2", "PC3")]), 2, as.numeric))
+
+```
+
