@@ -424,3 +424,26 @@ cor(apply(data.frame(subset(sample_data(phy.f.p), Species=="Acropora")[, c("D", 
 
 ```
 
+### Does beta diversity correspond to temperature regime?
+```{r}
+devtools::source_url("https://raw.githubusercontent.com/jrcunning/STJ2012/master/R/functions.R")
+
+acropora <- subset_samples(phy.f.p, Species=="Acropora")
+acrobd <- betad(acropora, group="Site")
+
+porites <- subset_samples(phy.f.p, Species=="Porties")
+porbd <- betad(porites, group="Site")
+
+par(mfrow=c(3,1))
+plot(pca.temp$x[,1], porbd$sambdsumm$mean, ylim=c(0,0.7), main="Beta diversity vs. Temp. PC1")
+points(pca.temp$x[,1], acrobd$sambdsumm$mean, col="red")
+plot(pca.temp$x[,2], porbd$sambdsumm$mean, ylim=c(0,0.7), main="Beta diversity vs. Temp. PC2")
+points(pca.temp$x[,2], acrobd$sambdsumm$mean, col="red")
+plot(pca.temp$x[,3], porbd$sambdsumm$mean, ylim=c(0,0.7), main="Beta diversity vs. Temp. PC3")
+points(pca.temp$x[,3], acrobd$sambdsumm$mean, col="red")
+
+```
+
+
+
+
