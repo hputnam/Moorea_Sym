@@ -13,6 +13,8 @@ taxcolors <- matrix(c("#8dd3c7", "#bebada", "#fb8072"),
 
 options(stringsAsFactors = FALSE)
 
+load("Data/Moorea_sym100.RData")  # Load 100% OTUs phyloseq object
+phy100.f <- phy.f  # Rename 100% OTUs as phy100.f
 load("Data/Moorea_sym.RData")  # loads phyloseq object named phy.f
 load("tempdata.RData") # loads the temperature data from temperature_analysis
 
@@ -23,6 +25,10 @@ n <- 10
 taxa <- taxa_sums(phy.f)[which(taxa_sums(phy.f) >= n)]
 # Remove taxa below threshold count
 phy.f <- prune_taxa(names(taxa), phy.f)
+# Identify OTUs below threshold count
+taxa <- taxa_sums(phy100.f)[which(taxa_sums(phy100.f) >= n)]
+# Remove taxa below threshold count
+phy100.f <- prune_taxa(names(taxa), phy100.f)
 
 
 # Filter samples by minimum count
@@ -30,6 +36,8 @@ phy.f <- prune_taxa(names(taxa), phy.f)
 sn <- 300
 # Remove samples with fewer reads than threshold
 phy.f <- prune_samples(sample_sums(phy.f)>=sn, phy.f)
+# Remove samples with fewer reads than threshold
+phy100.f <- prune_samples(sample_sums(phy100.f)>=sn, phy100.f)
 
 
 # Filter OTUs by minimum count again in case any dropped below threshold after filtering samples
@@ -37,6 +45,10 @@ phy.f <- prune_samples(sample_sums(phy.f)>=sn, phy.f)
 taxa <- taxa_sums(phy.f)[which(taxa_sums(phy.f) >= n)]
 # Remove taxa below threshold count
 phy.f <- prune_taxa(names(taxa), phy.f)
+# Identify OTUs below threshold count
+taxa <- taxa_sums(phy100.f)[which(taxa_sums(phy100.f) >= n)]
+# Remove taxa below threshold count
+phy100.f <- prune_taxa(names(taxa), phy100.f)
 
 
 # Label clades and subtypes for filtered phyloseq object tax_tables
@@ -53,12 +65,18 @@ get.st <- function(df) {
 }
 
 tax_table(phy.f) <- as.matrix(get.st(data.frame(tax_table(phy.f), stringsAsFactors=FALSE)))
+tax_table(phy100.f) <- as.matrix(get.st(data.frame(tax_table(phy100.f), stringsAsFactors=FALSE)))
 
 # Convert to proportion (relative abundance)
 phy.f.p <- transform_sample_counts(phy.f, function(x) x/sum(x))
 # Apply transformation function
 transform <- function(x) sqrt(x/sum(x))  # Set transformation function
 phy.f.t <- transform_sample_counts(phy.f, transform)  # Transform data
+# Convert to proportion (relative abundance)
+phy100.f.p <- transform_sample_counts(phy100.f, function(x) x/sum(x))
+# Apply transformation function
+transform <- function(x) sqrt(x/sum(x))  # Set transformation function
+phy100.f.t <- transform_sample_counts(phy100.f, transform)  # Transform data
 
 plot_bar(phy.f.p, fill="Subtype", facet_grid=~Species)
 
@@ -158,12 +176,12 @@ points(temp.all$Date.Time, temp.all$Site.9, pch=15, col="lightblue", cex=0.1)
 
 # Plot temperature distributions for each site
 par(mfrow=c(2,4), mar=c(3,3,2,2), mgp=c(1.5,0.1,0), tcl=-0.2)
-hist(temp.all$Site.1, xlim=c(26.5,31.5), breaks=20, main="Site 1", xlab="Temp ?C")
-hist(temp.all$Site.2, xlim=c(26.5,31.5), breaks=20, main="Site 2", xlab="Temp ?C")
-hist(temp.all$Site.3, xlim=c(26.5,31.5), breaks=20, main="Site 3", xlab="Temp ?C")
-hist(temp.all$Site.7, xlim=c(26.5,31.5), breaks=20, main="Site 7", xlab="Temp ?C")
-hist(temp.all$Site.8, xlim=c(26.5,31.5), breaks=20, main="Site 8", xlab="Temp ?C")
-hist(temp.all$Site.9, xlim=c(26.5,31.5), breaks=20, main="Site 9", xlab="Temp ?C")
+hist(temp.all$Site.1, xlim=c(25,32), breaks=seq(25,32,0.25), main="Site 1", xlab="Temp ?C")
+hist(temp.all$Site.2, xlim=c(25,32), breaks=seq(25,32,0.25), main="Site 2", xlab="Temp ?C")
+hist(temp.all$Site.3, xlim=c(25,32), breaks=seq(25,32,0.25), main="Site 3", xlab="Temp ?C")
+hist(temp.all$Site.7, xlim=c(25,32), breaks=seq(25,32,0.25), main="Site 7", xlab="Temp ?C")
+hist(temp.all$Site.8, xlim=c(25,32), breaks=seq(25,32,0.25), main="Site 8", xlab="Temp ?C")
+hist(temp.all$Site.9, xlim=c(25,32), breaks=seq(25,32,0.25), main="Site 9", xlab="Temp ?C")
 #hist(temp.all$MCR1, xlim=c(26.5,31.5), breaks=20, main="MCR1", xlab="Temp ?C")
 #hist(temp.all$MCR6, xlim=c(26.5,31.5), breaks=20, main="MCR6", xlab="Temp ?C")
 
@@ -237,38 +255,44 @@ sample_data(phy.f)$PCA4 <- gsub(" Site 9",PCA4[6,1],as.character(data.frame(samp
 ```
 
 # Multivariate analyses
-```{r, echo=FALSE}
+```{r, echo=FALSE, message=F}
 library(vegan)
 # Create a distance matrix from phy.f
 vd <- vegdist(t(data.frame(otu_table(phy.f.p))),method="bray")
+vd100 <- vegdist(t(data.frame(otu_table(phy100.f.p))),method="bray")
 
 # Use phyloseq wrapper for capscale to conduct distance-based RDA
-phy.f.CAP <- ordinate(phy.f,method="CAP",distance="bray",formula=~PCA1)
-phy.f.CAP # Print ordination results
-p1 = plot_ordination(phy.f, phy.f.CAP, type="taxa", color="Clade", title="taxa")
-print(p1)
-p2 = plot_ordination(phy.f, phy.f.CAP, type="sample",color="Species")
-print(p2)
+#phy.f.CAP <- ordinate(phy.f,method="CAP",distance="bray",formula=~PCA1)
+#phy.f.CAP # Print ordination results
+#p1 = plot_ordination(phy.f, phy.f.CAP, type="taxa", color="Clade", title="taxa")
+#print(p1)
+#p2 = plot_ordination(phy.f, phy.f.CAP, type="sample",color="Species")
+#print(p2)
 
-ord <- ordinate(phy.f, "NMDS", distance = "bray", trymax=100)
-plot_ordination(phy.f, ord)
-pcoa <- ordinate(phy.f.p, "PCoA", distance="bray", trymax=100)
-p3<-plot_ordination(phy.f, pcoa, type="sample", color="Species")
-print(p3)
+#NMDS on 97%-within-sample OTUs
+ord <- ordinate(phy.f.t, "NMDS", distance = "bray", trymax=100, trace=F)
+plot_ordination(phy.f.t, ord, color="Species", shape="Site",
+                title="97% within-sample OTUs")
 
-phy.f.por <- subset_samples(phy.f,Species=="Porties")
-ord2 <- ordinate(phy.f.por, "NMDS", distance = "bray", trymax=100)
-plot_ordination(phy.f.por, ord2)
+#NMDS on 100% OTUs
+ord <- ordinate(phy100.f.t, "NMDS", distance = "bray", trymax=100, trace=F)
+plot_ordination(phy100.f.t, ord, color="Species", shape="Site",
+                title="100% OTUs")
 
-phy.f.por.no.3 <- subset_samples(phy.f,DNA.ID!="209122")
-phy.f.por.no.3 <- subset_samples(phy.f.por.no.3,DNA.ID!="209100")
-phy.f.por.no.3 <- subset_samples(phy.f.por.no.3,DNA.ID!="209111")
-ord100 <- ordinate(phy.f.por.no.3,"PCoA", distance="bray",trymax=100)
-plot_ordination(phy.f.por.no.3,ord100,color="Species")
 
-phy.f.acr <- subset_samples(phy.f,Species=="Acropora")
-ord3 <- ordinate(phy.f.acr, "NMDS", distance = "bray", trymax=100)
-plot_ordination(phy.f.acr, ord3)
+#phy.f.por <- subset_samples(phy.f,Species=="Porties")
+#ord2 <- ordinate(phy.f.por, "NMDS", distance = "bray", trymax=100)
+#plot_ordination(phy.f.por, ord2)
+
+#phy.f.por.no.3 <- subset_samples(phy.f,DNA.ID!="209122")
+#phy.f.por.no.3 <- subset_samples(phy.f.por.no.3,DNA.ID!="209100")
+#phy.f.por.no.3 <- subset_samples(phy.f.por.no.3,DNA.ID!="209111")
+#ord100 <- ordinate(phy.f.por.no.3,"PCoA", distance="bray",trymax=100)
+#plot_ordination(phy.f.por.no.3,ord100,color="Species")
+
+#phy.f.acr <- subset_samples(phy.f,Species=="Acropora")
+#ord3 <- ordinate(phy.f.acr, "NMDS", distance = "bray", trymax=100)
+#plot_ordination(phy.f.acr, ord3)
 
 ```
 
@@ -281,4 +305,28 @@ sweep(aload, 2, colSums(aload), "/")
 
 ```
 
+# Evenness
+```{r}
+# Calculate Shannon Index and Pielou's Evenness for each sample
+H <- diversity(t(otu_table(phy.f)))  # Shannon Index
+J <- H/log(specnumber(t(otu_table(phy.f))))  # Pielou's Evenness
+adiv <- cbind(data.frame(H), data.frame(J), sample_data(phy.f))
+# Test for differences in Pielou's evenness due to sample Type
+pielou.aov <- aov(adiv$J ~ adiv$Species * adiv$Site)
+summary(pielou.aov)  # Pielou: significant Type effect
+print(TukeyHSD(pielou.aov))  # Pielou pairwise tests
+# Plot Pielou's evenness
+with(subset(adiv, Species=="Acropora"), {
+  boxplot(J ~ Site, ylim=c(0, 1), ylab="Pielou's Evenness",
+        outline=F, border="black",
+        main="Acropora Symbiodinium Evenness")
+})
+with(subset(adiv, Species=="Porties"), {
+  boxplot(J ~ Site, ylim=c(0, 1), ylab="Pielou's Evenness",
+        outline=F, border="black",
+        main="Porites Symbiodinium Evenness")
+})
+
+
+```
 
