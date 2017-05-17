@@ -197,18 +197,19 @@ temp.all <- join_all(list(Site.1,Site.2,Site.3,Site.7,Site.8,Site.9),by="Date.Ti
 temp.all <- na.omit(temp.all)
 
 # Calculate summary statistics for each site
+# Note that commented lines were tried in the original processing, but eliminated for repetitiveness
 temp.summ <- data.frame(mean=apply(temp.all[,2:7], 2, FUN=mean, na.rm=T),
-                        med=apply(temp.all[,2:7], 2, FUN=median, na.rm=T),
-                        sd=apply(temp.all[,2:7], 2, FUN=sd, na.rm=T),
+                        # med=apply(temp.all[,2:7], 2, FUN=median, na.rm=T),
+                        # sd=apply(temp.all[,2:7], 2, FUN=sd, na.rm=T),
                         var=apply(temp.all[,2:7], 2, FUN=var, na.rm=T),
                         min=apply(temp.all[,2:7], 2, FUN=min, na.rm=T),
                         max=apply(temp.all[,2:7], 2, FUN=max, na.rm=T),
-                        range=apply(temp.all[,2:7], 2, FUN=function(x) diff(range(x, na.rm=T))),
+                        # range=apply(temp.all[,2:7], 2, FUN=function(x) diff(range(x, na.rm=T))),
                         skew=apply(temp.all[,2:7], 2, FUN=skewness, na.rm=T),
-                        kurt=apply(temp.all[,2:7], 2, FUN=function(x) kurtosis(na.omit(x))-3),
-                        hskew=apply(temp.all[,2:7], 2, FUN=hyperskewness),
-                        hflat=apply(temp.all[,2:7], 2, FUN=hyperflatness),
+                        # kurt=apply(temp.all[,2:7], 2, FUN=function(x) kurtosis(na.omit(x))-3),
+                        # hskew=apply(temp.all[,2:7], 2, FUN=hyperskewness),
+                        # hflat=apply(temp.all[,2:7], 2, FUN=hyperflatness),
                         dip=apply(temp.all[,2:7], 2, FUN=function(x) dip(na.omit(x))))
 temp.summ
 
-save(MCR.temp,temp.all,temp.summ,file="tempdata.RData")
+save(temp.all,temp.summ,file="tempdata.RData")
