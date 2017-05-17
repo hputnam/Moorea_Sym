@@ -7,6 +7,7 @@ output: html_document
 
 ```{r load}
 library(phyloseq)
+library(multcompView)
 options(stringsAsFactors = FALSE)
 
 taxcolors <- matrix(c("#8dd3c7", "#bebada", "#fb8072"), 
@@ -176,7 +177,7 @@ points(temp.all$Date.Time, temp.all$Site.9, pch=15, col="lightblue", cex=0.1)
 #points(temp.all$Date.Time, temp.all$MCR6, pch=15, col="black", cex=0.1)
 
 # Plot temperature distributions for each site
-par(mfrow=c(2,4), mar=c(3,3,2,2), mgp=c(1.5,0.1,0), tcl=-0.2)
+par(mfrow=c(2,3), mar=c(3,3,2,2), mgp=c(1.5,0.1,0), tcl=-0.2)
 hist(temp.all$Site.1, xlim=c(25,32), breaks=seq(25,32,0.25), main="Site 1", xlab="Temp ?C")
 hist(temp.all$Site.2, xlim=c(25,32), breaks=seq(25,32,0.25), main="Site 2", xlab="Temp ?C")
 hist(temp.all$Site.3, xlim=c(25,32), breaks=seq(25,32,0.25), main="Site 3", xlab="Temp ?C")
@@ -188,27 +189,32 @@ hist(temp.all$Site.9, xlim=c(25,32), breaks=seq(25,32,0.25), main="Site 9", xlab
 
 # Plot rank order of various metrics
 with(temp.summ, {
-  par(mar=c(3,4,6,1), mfrow=c(1,1))
+  par(mar=c(3,3,3,11), mfrow=c(1,1),xpd=TRUE)
   plot(NA, xaxt="n", xlim=c(1,6), ylim=c(1,6), xlab="", ylab="Rank Order")
   axis(side=1, at=1:6, labels = rownames(temp.summ))
   lines(rank(mean), type="b", pch=15, col="gray")
   lines(rank(var), type="b", pch=5, col="green")
   lines(rank(skew), type="b", pch=2, col="blue")
-  lines(rank(kurt), type="b", pch=4, col="purple")
-  lines(rank(hflat), type="b", pch=6, col="black")
+  # lines(rank(kurt), type="b", pch=4, col="purple")
+  # lines(rank(hflat), type="b", pch=6, col="black")
   lines(rank(dip), type="b", pch=7, col="pink")
-  legend("top", legend=c("mean", "variance", "skewness", "kurtosis", "hyperflatness", "bimodality"),
-         lty=1, col=c("gray", "green", "blue", "purple", "black", "pink"),
-         pch=c(15,5,2,4,6,7), inset=c(0,-0.4), xpd=NA)
+  lines(rank(daily.mean.min),type="b",pch=4, col="purple")
+  lines(rank(daily.mean.max), type="b", pch=6, col="black")
+  lines(rank(daily.mean.range), type="b",pch=5,col="orange")
+  lines(rank(daysover30),type="b",pch=5,col="red")
+  lines(rank(daysunder27.5),type="b",pch=5,col="darkblue")
+  legend(6.5,7, legend=c("mean", "variance", "skewness", "bimodality", "mean daily min", "mean daily max", "mean daily range", "days over 30","days under 27.5"),
+         lty=1, col=c("gray", "green", "blue", "pink", "purple", "orange","red","darkblue"),
+         pch=c(15,5,2,7,4,6,5,5,5), inset=c(0,-0.4), xpd=NA)
 })
-
 ```
 
 ```{r, echo=FALSE}
 # PCA of various metrics
-temp <- as.data.frame((temp.summ[,c(1:12)]))
+temp <- as.data.frame((temp.summ[,c(1:2,5:8,10,13)]))
 pca.temp <- prcomp(temp, scale=TRUE) # Run PCA
 summary(pca.temp)
+par(mar=c(1,1,1,1))
 plot(pca.temp)
 biplot(pca.temp) #Plot PCA results on a biplot
 aload <- abs(pca.temp$rotation)
@@ -245,13 +251,13 @@ sample_data(phy.f)$PCA3 <- gsub(" Site 7",PCA3[4,1],as.character(data.frame(samp
 sample_data(phy.f)$PCA3 <- gsub(" Site 8",PCA3[5,1],as.character(data.frame(sample_data(phy.f))$PCA3))
 sample_data(phy.f)$PCA3 <- gsub(" Site 9",PCA3[6,1],as.character(data.frame(sample_data(phy.f))$PCA3))
 # Append PCA4 as a new phy.f sample data column
-sample_data(phy.f)$PCA4 <- sample_data(phy.f)$Site
-sample_data(phy.f)$PCA4 <- gsub(" Site 1",PCA4[1,1],as.character(data.frame(sample_data(phy.f))$PCA4))
-sample_data(phy.f)$PCA4 <- gsub(" Site 2",PCA4[2,1],as.character(data.frame(sample_data(phy.f))$PCA4))
-sample_data(phy.f)$PCA4 <- gsub(" Site 3",PCA4[3,1],as.character(data.frame(sample_data(phy.f))$PCA4))
-sample_data(phy.f)$PCA4 <- gsub(" Site 7",PCA4[4,1],as.character(data.frame(sample_data(phy.f))$PCA4))
-sample_data(phy.f)$PCA4 <- gsub(" Site 8",PCA4[5,1],as.character(data.frame(sample_data(phy.f))$PCA4))
-sample_data(phy.f)$PCA4 <- gsub(" Site 9",PCA4[6,1],as.character(data.frame(sample_data(phy.f))$PCA4))
+# sample_data(phy.f)$PCA4 <- sample_data(phy.f)$Site
+# sample_data(phy.f)$PCA4 <- gsub(" Site 1",PCA4[1,1],as.character(data.frame(sample_data(phy.f))$PCA4))
+# sample_data(phy.f)$PCA4 <- gsub(" Site 2",PCA4[2,1],as.character(data.frame(sample_data(phy.f))$PCA4))
+# sample_data(phy.f)$PCA4 <- gsub(" Site 3",PCA4[3,1],as.character(data.frame(sample_data(phy.f))$PCA4))
+# sample_data(phy.f)$PCA4 <- gsub(" Site 7",PCA4[4,1],as.character(data.frame(sample_data(phy.f))$PCA4))
+# sample_data(phy.f)$PCA4 <- gsub(" Site 8",PCA4[5,1],as.character(data.frame(sample_data(phy.f))$PCA4))
+# sample_data(phy.f)$PCA4 <- gsub(" Site 9",PCA4[6,1],as.character(data.frame(sample_data(phy.f))$PCA4))
 
 ```
 
@@ -275,10 +281,16 @@ ord <- ordinate(phy.f.t, "NMDS", distance = "bray", trymax=100, trace=F)
 plot_ordination(phy.f.t, ord, color="Species", shape="Site",
                 title="97% within-sample OTUs")
 
+# plot_ordination(phy.f.t, ord, color="Site", shape="Species",
+#                 title="97% within-sample OTUs")
+
 #NMDS on 100% OTUs
 ord <- ordinate(phy100.f.t, "NMDS", distance = "bray", trymax=100, trace=F)
 plot_ordination(phy100.f.t, ord, color="Species", shape="Site",
                 title="100% OTUs")
+
+# plot_ordination(phy100.f.t, ord, color="Site", shape="Species",
+#                 title="100% OTUs")
 
 
 #phy.f.por <- subset_samples(phy.f,Species=="Porties")
@@ -300,9 +312,6 @@ plot_ordination(phy100.f.t, ord, color="Species", shape="Site",
 ```{r,include=TRUE,echo=FALSE}
 principal.coral <- subset_taxa(phy.f.p, taxa_sums(phy.f.p) > 0.01, prune=TRUE)
 background.coral <- subset_taxa(phy.f.p, taxa_sums(phy.f.p) < 0.01, prune=TRUE)
-
-aload <- abs(pca.temp$rotation)
-sweep(aload, 2, colSums(aload), "/")
 
 ```
 
