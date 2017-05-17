@@ -212,4 +212,87 @@ temp.summ <- data.frame(mean=apply(temp.all[,2:7], 2, FUN=mean, na.rm=T),
                         dip=apply(temp.all[,2:7], 2, FUN=function(x) dip(na.omit(x))))
 temp.summ
 
+
+
+temp.all$Date <- as.Date(temp.all$Date.Time)
+
+temp.daily.mean<-aggregate(cbind(temp.all$Site.1,temp.all$Site.2,temp.all$Site.3,temp.all$Site.7,temp.all$Site.8,temp.all$Site.9) ~ temp.all$Date, FUN=mean)
+colnames(temp.daily.mean) <- c("Date","Site.1","Site.2","Site.3","Site.7","Site.8","Site.9")
+
+temp.daily.max<-aggregate(cbind(temp.all$Site.1,temp.all$Site.2,temp.all$Site.3,temp.all$Site.7,temp.all$Site.8,temp.all$Site.9) ~ temp.all$Date, FUN=max)
+colnames(temp.daily.max) <- c("Date","Site.1","Site.2","Site.3","Site.7","Site.8","Site.9")
+
+temp.daily.min<-aggregate(cbind(temp.all$Site.1,temp.all$Site.2,temp.all$Site.3,temp.all$Site.7,temp.all$Site.8,temp.all$Site.9) ~ temp.all$Date, FUN=min)
+colnames(temp.daily.min) <- c("Date","Site.1","Site.2","Site.3","Site.7","Site.8","Site.9")
+
+temp.daily.range<- temp.daily.max - temp.daily.min
+temp.daily.range$Date <- temp.daily.max$Date
+
+temp.daysover30 <- temp.daily.max
+temp.daysover30$Site.1 <- temp.daily.max$Site.1>30
+temp.daysover30$Site.2 <- temp.daily.max$Site.2>30
+temp.daysover30$Site.3 <- temp.daily.max$Site.3>30
+temp.daysover30$Site.7 <- temp.daily.max$Site.7>30
+temp.daysover30$Site.8 <- temp.daily.max$Site.8>30
+temp.daysover30$Site.9 <- temp.daily.max$Site.9>30
+
+temp.daysover30.sum <- data.frame(Site.1=sum(temp.daysover30$Site.1),Site.2=sum(temp.daysover30$Site.2),Site.3=sum(temp.daysover30$Site.3),Site.7=sum(temp.daysover30$Site.7),Site.8=sum(temp.daysover30$Site.8),Site9=sum(temp.daysover30$Site.9))
+
+temp.daysover31 <- temp.daily.max
+temp.daysover31$Site.1 <- temp.daily.max$Site.1>31
+temp.daysover31$Site.2 <- temp.daily.max$Site.2>31
+temp.daysover31$Site.3 <- temp.daily.max$Site.3>31
+temp.daysover31$Site.7 <- temp.daily.max$Site.7>31
+temp.daysover31$Site.8 <- temp.daily.max$Site.8>31
+temp.daysover31$Site.9 <- temp.daily.max$Site.9>31
+
+temp.daysover31.sum <- data.frame(Site.1=sum(temp.daysover31$Site.1),Site.2=sum(temp.daysover31$Site.2),Site.3=sum(temp.daysover31$Site.3),Site.7=sum(temp.daysover31$Site.7),Site.8=sum(temp.daysover31$Site.8),Site9=sum(temp.daysover31$Site.9))
+
+temp.daysunder27 <- temp.daily.max
+temp.daysunder27$Site.1 <- temp.daily.max$Site.1<27
+temp.daysunder27$Site.2 <- temp.daily.max$Site.2<27
+temp.daysunder27$Site.3 <- temp.daily.max$Site.3<27
+temp.daysunder27$Site.7 <- temp.daily.max$Site.7<27
+temp.daysunder27$Site.8 <- temp.daily.max$Site.8<27
+temp.daysunder27$Site.9 <- temp.daily.max$Site.9<27
+
+temp.daysunder27.sum <- data.frame(Site.1=sum(temp.daysunder27$Site.1),Site.2=sum(temp.daysunder27$Site.2),Site.3=sum(temp.daysunder27$Site.3),Site.7=sum(temp.daysunder27$Site.7),Site.8=sum(temp.daysunder27$Site.8),Site9=sum(temp.daysunder27$Site.9))
+
+temp.daysunder27.5 <- temp.daily.max
+temp.daysunder27.5$Site.1 <- temp.daily.max$Site.1<27.5
+temp.daysunder27.5$Site.2 <- temp.daily.max$Site.2<27.5
+temp.daysunder27.5$Site.3 <- temp.daily.max$Site.3<27.5
+temp.daysunder27.5$Site.7 <- temp.daily.max$Site.7<27.5
+temp.daysunder27.5$Site.8 <- temp.daily.max$Site.8<27.5
+temp.daysunder27.5$Site.9 <- temp.daily.max$Site.9<27.5
+
+temp.daysunder27.5.sum <- data.frame(Site.1=sum(temp.daysunder27.5$Site.1),Site.2=sum(temp.daysunder27.5$Site.2),Site.3=sum(temp.daysunder27.5$Site.3),Site.7=sum(temp.daysunder27.5$Site.7),Site.8=sum(temp.daysunder27.5$Site.8),Site9=sum(temp.daysunder27.5$Site.9))
+
+
+temp.daysunder28 <- temp.daily.max
+temp.daysunder28$Site.1 <- temp.daily.max$Site.1<28
+temp.daysunder28$Site.2 <- temp.daily.max$Site.2<28
+temp.daysunder28$Site.3 <- temp.daily.max$Site.3<28
+temp.daysunder28$Site.7 <- temp.daily.max$Site.7<28
+temp.daysunder28$Site.8 <- temp.daily.max$Site.8<28
+temp.daysunder28$Site.9 <- temp.daily.max$Site.9<28
+
+temp.daysunder28.sum <- data.frame(Site.1=sum(temp.daysunder28$Site.1),Site.2=sum(temp.daysunder28$Site.2),Site.3=sum(temp.daysunder28$Site.3),Site.7=sum(temp.daysunder28$Site.7),Site.8=sum(temp.daysunder28$Site.8),Site9=sum(temp.daysunder28$Site.9))
+
+temp.summ$daily.mean.min <- colMeans(temp.daily.min[2:7])
+temp.summ$daily.mean.max <- colMeans(temp.daily.max[2:7])
+temp.summ$daily.mean.range <- colMeans(temp.daily.range[2:7])
+temp.summ$daysover30 <- t(temp.daysover30.sum)
+temp.summ$daysover31 <- t(temp.daysover31.sum)
+temp.summ$daysunder27 <- t(temp.daysunder27.sum)
+temp.summ$daysunder27.5 <- t(temp.daysunder27.5.sum)
+temp.summ$daysunder28 <- t(temp.daysunder28.sum)
+
+ggplot(data=temp.daily.max, aes(temp.daily.max$Site.1)) + geom_histogram()
+ggplot(data=temp.daily.max, aes(temp.daily.max$Site.2)) + geom_histogram()
+ggplot(data=temp.daily.max, aes(temp.daily.max$Site.3)) + geom_histogram()
+ggplot(data=temp.daily.max, aes(temp.daily.max$Site.7)) + geom_histogram()
+ggplot(data=temp.daily.max, aes(temp.daily.max$Site.8)) + geom_histogram()
+ggplot(data=temp.daily.max, aes(temp.daily.max$Site.9)) + geom_histogram()
+
 save(temp.all,temp.summ,file="tempdata.RData")
