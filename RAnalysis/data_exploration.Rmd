@@ -91,7 +91,8 @@ write.table(data.frame(tax_table(phy.f)), "Data/tax.table.txt", row.names=T, quo
 
 ```
 
-# Unifrac dis
+# Unifrac Distance
+```{r}
 #https://rdrr.io/rforge/seqinr/man/dist.alignment.html
 #returns sqrt of pairwise genetic distance, then squared the matrices
 A.seqs <- read.alignment(file = "Data/A_tree_seqs_aligned_clean.fasta", format= "fasta")
@@ -133,7 +134,7 @@ UF.dis <- UniFrac(phy.f, weighted=TRUE, normalized=F, parallel=FALSE, fast=TRUE)
 ord <- ordinate(phy.f, "NMDS", UF.dis, trymax=100, trace=F)
 plot_ordination(phy.f, ord, color="Species", shape="Site",
                 title="97% within-sample OTUs")
-
+```
 
 # Clade overview
 The relative abundance of each clade in the entire dataset (normalized for differences in sequencing depth across samples).
@@ -236,6 +237,9 @@ hist(temp.all$Site.8, xlim=c(25,32), breaks=seq(25,32,0.25), main="Site 8", xlab
 hist(temp.all$Site.9, xlim=c(25,32), breaks=seq(25,32,0.25), main="Site 9", xlab="Temp ?C")
 #hist(temp.all$MCR1, xlim=c(26.5,31.5), breaks=20, main="MCR1", xlab="Temp ?C")
 #hist(temp.all$MCR6, xlim=c(26.5,31.5), breaks=20, main="MCR6", xlab="Temp ?C")
+
+# View Descriptive Stats
+temp.summ
 
 # Plot rank order of various metrics
 with(temp.summ, {
@@ -506,37 +510,6 @@ points(pca.temp$x[,3], acrobd$sambdsumm$mean, col="red")
 ### Does phylogenetically informed beta diversity correspond to temperature regime?
 ```{r}
 
-library(phyloseq)
-
-# Unifrac dis
-#https://rdrr.io/rforge/seqinr/man/dist.alignment.html
-#returns sqrt of pairwise genetic distance, then squared the matrices
-A.seqs <- read.alignment(file = "Data/A_tree_seqs_aligned_clean.fasta", format= "fasta")
-A.dis <- (as.matrix(dist.alignment(A.seqs, matrix = "identity" )))^2
-write.csv(A.dis, file="Data/A.dis.matx.csv")
-
-C.seqs <- read.alignment(file = "Data/C_tree_seqs_aligned_clean.fasta", format= "fasta")
-C.dis <- (as.matrix(dist.alignment(C.seqs, matrix = "identity" )))^2
-write.csv(C.dis, file="Data/C.dis.matx.csv")
-
-D.seqs <- read.alignment(file = "Data/D_tree_seqs_aligned_clean.fasta", format= "fasta")
-D.dis <- (as.matrix(dist.alignment(D.seqs, matrix = "identity" )))^2
-write.csv(D.dis, file="D.dis.matx.csv")
-
-A_C <- matrix(0.1960, ncol=ncol(A.dis), nrow=nrow(C.dis), dimnames=list(rownames(C.dis), colnames(A.dis)))
-A_D <- matrix(0.1775, ncol=ncol(A.dis), nrow=nrow(D.dis), dimnames=list(rownames(D.dis), colnames(A.dis)))
-C_D <- matrix(0.1520, ncol=ncol(C.dis), nrow=nrow(D.dis), dimnames=list(rownames(D.dis), colnames(C.dis)))
-  
-#build ACD matrix
-col1 <- rbind(A.dis, A_C, A_D)
-col2 <- rbind(matrix(NA, nrow=nrow(A.dis), ncol=ncol(C.dis), dimnames=list(rownames(A.dis), colnames(C.dis))), C.dis, C_D)
-col3 <- rbind(matrix(NA, nrow=nrow(A.dis)+nrow(C.dis), ncol=ncol(D.dis), dimnames=list(c(rownames(A.dis), rownames(C.dis)), colnames(D.dis))), D.dis)
-
-ubermatrix <- cbind(col1, col2, col3)
-uber.tree <- phangorn::upgma(ubermatrix)
-phy_tree(phy.f) <- phy_tree(uber.tree)
-phy_tree(phy.f.p) <- phy_tree(uber.tree)
-
 betadiv <- function(phy, group) {
   # Calculate distances to species centroids for each sample in principal coordinate space
   samdat <- data.frame(sample_data(phy))
@@ -573,6 +546,18 @@ plot(pca.temp$x[,2], porbdiv$sambdsumm$mean, ylim=c(0,0.15), main="Phylogenetica
 points(pca.temp$x[,2], acrobdiv$sambdsumm$mean, col="red")
 plot(pca.temp$x[,3], porbdiv$sambdsumm$mean, ylim=c(0,0.15), main="Phylogenetically Informed Beta diversity vs. Temp. PC3")
 points(pca.temp$x[,3], acrobdiv$sambdsumm$mean, col="red")
+
+par(mfrow=c(3,1))
+plot(temp.summ$daysover30, porbdiv$sambdsumm$mean, ylim=c(0,0.15), main="Phylogenetically Informed Beta diversity vs. Days over 30")
+points(temp.summ$daysover30, acrobdiv$sambdsumm$mean, col="red")
+
+plot(temp.summ$daily.mean.range, porbdiv$sambdsumm$mean, ylim=c(0,0.15), main="Phylogenetically Informed Beta diversity vs. Day Mean Range")
+points(temp.summ$daily.mean.range, acrobdiv$sambdsumm$mean, col="red")
+
+plot(temp.summ$var, porbdiv$sambdsumm$mean, ylim=c(0,0.15), main="Phylogenetically Informed Beta diversity vs. Variance")
+points(temp.summ$var, acrobdiv$sambdsumm$mean, col="red")
+
+
 
 ```
 
