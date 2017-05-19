@@ -29,7 +29,7 @@ ubermatrix <- cbind(col1, col2, col3)
 dim(ubermatrix)
 
 #build tree
-uber.tree <- upgma(ubermatrix)
+uber.tree <- phangorn::upgma(ubermatrix)
 plot(uber.tree, main="UPGMA")
 
 #write tree to file
@@ -40,6 +40,14 @@ write.tree(uber.tree, file="uber.tre")
 
 write.delim(data.frame(otu_table(phy.f)), "otu_table.tsv", quote = FALSE, row.names = T, sep = "\t")
 
+class(uber.tree)
 
-  
+phy_tree(uber.tree)
+
+# Load phyloseq object
+load("Data/Moorea_sym.RData")
+# Slot uber tree into the phy_tree slot of the phyloseq object
+phy_tree(phy.f) <- phy_tree(uber.tree)
+
+
   
