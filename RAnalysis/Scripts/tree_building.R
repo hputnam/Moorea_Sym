@@ -20,7 +20,10 @@ A_C <- 0.1960
 A_D <- 0.1775
 C_D <- 0.1520
   
-#build matrix
+#build ACD matrix
+matx <- rbind(A.dis,C.dis,D.dis )
+
+
 
 #build tree
 

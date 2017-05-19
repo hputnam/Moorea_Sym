@@ -1,0 +1,45 @@
+#working from Moorea_Sym
+
+#Bioinf/clust/all_rep_set_rep_set.fasta = seqs
+#RAnalysis/Data/tax.table.txt = ISDs
+#column 9 is clade ID
+#awk '{print $1}' RAnalysis/Data/tax.table.txt = denovo name
+#awk '{print $8}' RAnalysis/Data/tax.table.txt = clade name
+
+#set ID list
+awk '{if (NR!=1) {print $1}}' RAnalysis/Data/tax.table.txt > RAnalysis/Data/tree_seq.ids
+
+#set Clade ID lists
+awk '{if (NR!=1) {print $1}}' RAnalysis/Data/A_tax.table.txt > RAnalysis/Data/A_tree_seq.ids
+
+awk '$8 ~ /^A/{ print $1; }' RAnalysis/Data/tax.table.txt > RAnalysis/Data/A_tree_seq.ids
+awk '$8 ~ /^C/{ print $1; }' RAnalysis/Data/tax.table.txt > RAnalysis/Data/C_tree_seq.ids
+awk '$8 ~ /^D/{ print $1; }' RAnalysis/Data/tax.table.txt > RAnalysis/Data/D_tree_seq.ids
+
+
+source /macqiime/configs/bash_profile.txt
+
+#filter seqs by id list
+filter_fasta.py -f Bioinf/clust/all_rep_set_rep_set.fasta -s RAnalysis/Data/A_tree_seq.ids -o RAnalysis/Data/A_tree_seqs.fasta
+filter_fasta.py -f Bioinf/clust/all_rep_set_rep_set.fasta -s RAnalysis/Data/C_tree_seq.ids -o RAnalysis/Data/C_tree_seqs.fasta
+filter_fasta.py -f Bioinf/clust/all_rep_set_rep_set.fasta -s RAnalysis/Data/D_tree_seq.ids -o RAnalysis/Data/D_tree_seqs.fasta
+
+#check seq number
+grep -c ">" RAnalysis/Data/A_tree_seqs.fasta
+grep -c ">" RAnalysis/Data/C_tree_seqs.fasta
+grep -c ">" RAnalysis/Data/D_tree_seqs.fasta
+
+#align fasta files for each clade
+align_seqs.py -i RAnalysis/Data/A_tree_seqs.fasta -m muscle -o RAnalysis/Data/
+align_seqs.py -i RAnalysis/Data/C_tree_seqs.fasta -m muscle -o RAnalysis/Data/
+align_seqs.py -i RAnalysis/Data/D_tree_seqs.fasta -m muscle -o RAnalysis/Data/
+
+
+#generate distance matrices
+ myseqs <- read.alignment(file = "A_tree_seqs_aligned.fasta", 
+ package = "seqinr"), format = "mase")
+ dist.alignment(myseqs, matrix = "identity" )
+ as.matrix(dist.alignment(myseqs, matrix = "identity" ))
+
+#build tree
+make_phylogeny.py -i RAnalysis/Data/A_tree_seqs_aligned.fasta -t fasttree -r tree_method_default -o RAnalysis/Data/A_tree.tre
