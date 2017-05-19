@@ -20,6 +20,11 @@ phy100.f <- phy.f  # Rename 100% OTUs as phy100.f
 load("Data/Moorea_sym.RData")  # loads phyloseq object named phy.f
 load("tempdata.RData") # loads the temperature data from temperature_analysis
 
+library(seqinr)
+library(phangorn) 
+library(caroline)
+
+# MOVE FILTERING TO MAKE FILE #
 # Filter OTUs by minimum count
 # Set threshold count
 n <- 10
@@ -82,7 +87,52 @@ phy100.f.t <- transform_sample_counts(phy100.f, transform)  # Transform data
 
 plot_bar(phy.f.p, fill="Subtype", facet_grid=~Species)
 
+write.table(data.frame(tax_table(phy.f)), "Data/tax.table.txt", row.names=T, quote=F)
+
 ```
+
+# Unifrac dis
+#https://rdrr.io/rforge/seqinr/man/dist.alignment.html
+#returns sqrt of pairwise genetic distance, then squared the matrices
+A.seqs <- read.alignment(file = "Data/A_tree_seqs_aligned_clean.fasta", format= "fasta")
+A.dis <- (as.matrix(dist.alignment(A.seqs, matrix = "identity" )))^2
+write.csv(A.dis, file="Data/A.dis.matx.csv")
+
+C.seqs <- read.alignment(file = "Data/C_tree_seqs_aligned_clean.fasta", format= "fasta")
+C.dis <- (as.matrix(dist.alignment(C.seqs, matrix = "identity" )))^2
+write.csv(C.dis, file="Data/C.dis.matx.csv")
+
+D.seqs <- read.alignment(file = "Data/D_tree_seqs_aligned_clean.fasta", format= "fasta")
+D.dis <- (as.matrix(dist.alignment(D.seqs, matrix = "identity" )))^2
+write.csv(D.dis, file="D.dis.matx.csv")
+
+A_C <- matrix(0.1960, ncol=ncol(A.dis), nrow=nrow(C.dis), dimnames=list(rownames(C.dis), colnames(A.dis)))
+A_D <- matrix(0.1775, ncol=ncol(A.dis), nrow=nrow(D.dis), dimnames=list(rownames(D.dis), colnames(A.dis)))
+C_D <- matrix(0.1520, ncol=ncol(C.dis), nrow=nrow(D.dis), dimnames=list(rownames(D.dis), colnames(C.dis)))
+  
+#build ACD matrix
+col1 <- rbind(A.dis, A_C, A_D)
+col2 <- rbind(matrix(NA, nrow=nrow(A.dis), ncol=ncol(C.dis), dimnames=list(rownames(A.dis), colnames(C.dis))), C.dis, C_D)
+col3 <- rbind(matrix(NA, nrow=nrow(A.dis)+nrow(C.dis), ncol=ncol(D.dis), dimnames=list(c(rownames(A.dis), rownames(C.dis)), colnames(D.dis))), D.dis)
+
+ubermatrix <- cbind(col1, col2, col3)
+dim(ubermatrix)
+
+#build tree
+uber.tree <- phangorn::upgma(ubermatrix)
+plot(uber.tree, main="UPGMA")
+
+# Slot uber tree into the phy_tree slot of the phyloseq object
+phy_tree(phy.f) <- phy_tree(uber.tree)
+phy_tree(phy.f.p) <- phy_tree(uber.tree)
+
+# Calculate weighted Unifrac distance
+UF.dis <- UniFrac(phy.f, weighted=TRUE, normalized=F, parallel=FALSE, fast=TRUE)
+
+#NMDS on 97%-within-sample OTUs
+ord <- ordinate(phy.f, "NMDS", UF.dis, trymax=100, trace=F)
+plot_ordination(phy.f, ord, color="Species", shape="Site",
+                title="97% within-sample OTUs")
 
 
 # Clade overview
@@ -453,6 +503,76 @@ points(pca.temp$x[,3], acrobd$sambdsumm$mean, col="red")
 
 ```
 
+### Does phylogenetically informed beta diversity correspond to temperature regime?
+```{r}
 
+library(phyloseq)
 
+# Unifrac dis
+#https://rdrr.io/rforge/seqinr/man/dist.alignment.html
+#returns sqrt of pairwise genetic distance, then squared the matrices
+A.seqs <- read.alignment(file = "Data/A_tree_seqs_aligned_clean.fasta", format= "fasta")
+A.dis <- (as.matrix(dist.alignment(A.seqs, matrix = "identity" )))^2
+write.csv(A.dis, file="Data/A.dis.matx.csv")
+
+C.seqs <- read.alignment(file = "Data/C_tree_seqs_aligned_clean.fasta", format= "fasta")
+C.dis <- (as.matrix(dist.alignment(C.seqs, matrix = "identity" )))^2
+write.csv(C.dis, file="Data/C.dis.matx.csv")
+
+D.seqs <- read.alignment(file = "Data/D_tree_seqs_aligned_clean.fasta", format= "fasta")
+D.dis <- (as.matrix(dist.alignment(D.seqs, matrix = "identity" )))^2
+write.csv(D.dis, file="D.dis.matx.csv")
+
+A_C <- matrix(0.1960, ncol=ncol(A.dis), nrow=nrow(C.dis), dimnames=list(rownames(C.dis), colnames(A.dis)))
+A_D <- matrix(0.1775, ncol=ncol(A.dis), nrow=nrow(D.dis), dimnames=list(rownames(D.dis), colnames(A.dis)))
+C_D <- matrix(0.1520, ncol=ncol(C.dis), nrow=nrow(D.dis), dimnames=list(rownames(D.dis), colnames(C.dis)))
+  
+#build ACD matrix
+col1 <- rbind(A.dis, A_C, A_D)
+col2 <- rbind(matrix(NA, nrow=nrow(A.dis), ncol=ncol(C.dis), dimnames=list(rownames(A.dis), colnames(C.dis))), C.dis, C_D)
+col3 <- rbind(matrix(NA, nrow=nrow(A.dis)+nrow(C.dis), ncol=ncol(D.dis), dimnames=list(c(rownames(A.dis), rownames(C.dis)), colnames(D.dis))), D.dis)
+
+ubermatrix <- cbind(col1, col2, col3)
+uber.tree <- phangorn::upgma(ubermatrix)
+phy_tree(phy.f) <- phy_tree(uber.tree)
+phy_tree(phy.f.p) <- phy_tree(uber.tree)
+
+betadiv <- function(phy, group) {
+  # Calculate distances to species centroids for each sample in principal coordinate space
+  samdat <- data.frame(sample_data(phy))
+  UFdist <- UniFrac(phy, weighted=TRUE, normalized=F, parallel=FALSE, fast=TRUE)
+  sambd <- betadisper(d=UFdist, group=samdat[, group], 
+                      type="centroid", bias.adjust=FALSE)
+  # Calculate each species' mean distance to centroid and standard error
+  sambdsumm <- aggregate(data.frame(mean=as.vector(sambd$distances)), by=list(group=sambd$group), FUN=mean)
+  sambdsumm$se <- aggregate(as.vector(sambd$distances), by=list(group=sambd$group), 
+                            FUN=function(x) sd(x)/sqrt(length(x)))$x
+  # Determine order of decreasing mean dispersion
+  sambdsumm.ord <- sambdsumm[order(sambdsumm$mean, decreasing=T), ]
+  # Update betadisper object with species in decreasing order of mean dispersion
+  sambd <- betadisper(d=UFdist, 
+                      group=factor(samdat[, group], levels=as.character(sambdsumm.ord$group)), 
+                      type="centroid", bias.adjust=FALSE)
+  # Use permutations to perform pairwise comparisons of group mean dispersions
+  sampt <- permutest(sambd, pairwise=T)
+  saml <- multcompLetters(sampt$pairwise$permuted)
+  # Return results as a list
+  return(list(sambdsumm.ord=sambdsumm.ord, sambdsumm=sambdsumm, saml=saml))
+}
+
+acropora.bd <- subset_samples(phy.f.p, Species=="Acropora")
+acrobdiv <- betadiv(acropora.bd, group="Site")
+
+porites.bd <- subset_samples(phy.f.p, Species=="Porties")
+porbdiv <- betadiv(porites.bd, group="Site")
+
+par(mfrow=c(3,1))
+plot(pca.temp$x[,1], porbdiv$sambdsumm$mean, ylim=c(0,0.15), main="Phylogenetically Informed Beta diversity vs. Temp. PC1")
+points(pca.temp$x[,1], acrobdiv$sambdsumm$mean, col="red")
+plot(pca.temp$x[,2], porbdiv$sambdsumm$mean, ylim=c(0,0.15), main="Phylogenetically Informed Beta diversity vs. Temp. PC2")
+points(pca.temp$x[,2], acrobdiv$sambdsumm$mean, col="red")
+plot(pca.temp$x[,3], porbdiv$sambdsumm$mean, ylim=c(0,0.15), main="Phylogenetically Informed Beta diversity vs. Temp. PC3")
+points(pca.temp$x[,3], acrobdiv$sambdsumm$mean, col="red")
+
+```
 
