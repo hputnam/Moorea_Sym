@@ -1,5 +1,13 @@
 #working from Moorea_Sym
 
+# In Make file after filtering add these
+write.table(data.frame(otu_table(phy.f)), "otu_table.txt", row.names=T, quote=F)
+## Needs to be in biom format
+
+
+
+write.table(data.frame(tax_table(phy.f)), "tax_table.txt", row.names=T, quote=F)
+
 #Bioinf/clust/all_rep_set_rep_set.fasta = seqs
 #RAnalysis/Data/tax.table.txt = ISDs
 #column 9 is clade ID
@@ -34,12 +42,22 @@ align_seqs.py -i RAnalysis/Data/A_tree_seqs.fasta -m muscle -o RAnalysis/Data/
 align_seqs.py -i RAnalysis/Data/C_tree_seqs.fasta -m muscle -o RAnalysis/Data/
 align_seqs.py -i RAnalysis/Data/D_tree_seqs.fasta -m muscle -o RAnalysis/Data/
 
+#remove extra header info from alignments
+sed 's/ .*//' A_tree_seqs_aligned.fasta > A_tree_seqs_aligned_clean.fasta
+sed 's/ .*//' C_tree_seqs_aligned.fasta > C_tree_seqs_aligned_clean.fasta
+sed 's/ .*//' D_tree_seqs_aligned.fasta > D_tree_seqs_aligned_clean.fasta
 
-#generate distance matrices
- myseqs <- read.alignment(file = "A_tree_seqs_aligned.fasta", 
- package = "seqinr"), format = "mase")
- dist.alignment(myseqs, matrix = "identity" )
- as.matrix(dist.alignment(myseqs, matrix = "identity" ))
+#convert otu table to biom format
+https://www.bioconductor.org/packages/release/bioc/html/biomformat.html
 
-#build tree
-make_phylogeny.py -i RAnalysis/Data/A_tree_seqs_aligned.fasta -t fasttree -r tree_method_default -o RAnalysis/Data/A_tree.tre
+# in R
+write.delim(data.frame(otu_table(phy.f)), "otu_table.tsv", quote = FALSE, row.names = T, sep = "\t")
+
+#in QIIME
+biom convert -i RAnalysis/Data/otu_table.tsv -o RAnalysis/Data/otu_table.biom --to-hdf5 --table-type="OTU table"
+
+#in bash
+nano RAnalysis/Data/otu_table.tsv 
+#add OTU tab
+
+beta_diversity.py -i RAnalysis/Data/otu_table.biom -t RAnalysis/Data/uber.tre -m weighted_unifrac -o RAnalysis/Data/ 
