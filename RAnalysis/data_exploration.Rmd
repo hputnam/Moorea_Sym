@@ -132,8 +132,14 @@ UF.dis <- UniFrac(phy.f, weighted=TRUE, normalized=F, parallel=FALSE, fast=TRUE)
 
 #NMDS on 97%-within-sample OTUs
 ord <- ordinate(phy.f, "NMDS", UF.dis, trymax=100, trace=F)
+ord2 <- ordinate(phy.f, "PCoA", "wunifrac")
+# Plot the coral samples
 plot_ordination(phy.f, ord, color="Species", shape="Site",
                 title="97% within-sample OTUs")
+# Plot the Symbiodinium taxa
+plot_ordination(phy.f, ord2, color="Clade", type="species",
+                title="97% within-sample OTUs")
+
 ```
 
 # Clade overview
@@ -305,13 +311,87 @@ sample_data(phy.f)$PCA3 <- gsub(" Site 7",PCA3[4,1],as.character(data.frame(samp
 sample_data(phy.f)$PCA3 <- gsub(" Site 8",PCA3[5,1],as.character(data.frame(sample_data(phy.f))$PCA3))
 sample_data(phy.f)$PCA3 <- gsub(" Site 9",PCA3[6,1],as.character(data.frame(sample_data(phy.f))$PCA3))
 # Append PCA4 as a new phy.f sample data column
-# sample_data(phy.f)$PCA4 <- sample_data(phy.f)$Site
-# sample_data(phy.f)$PCA4 <- gsub(" Site 1",PCA4[1,1],as.character(data.frame(sample_data(phy.f))$PCA4))
-# sample_data(phy.f)$PCA4 <- gsub(" Site 2",PCA4[2,1],as.character(data.frame(sample_data(phy.f))$PCA4))
-# sample_data(phy.f)$PCA4 <- gsub(" Site 3",PCA4[3,1],as.character(data.frame(sample_data(phy.f))$PCA4))
-# sample_data(phy.f)$PCA4 <- gsub(" Site 7",PCA4[4,1],as.character(data.frame(sample_data(phy.f))$PCA4))
-# sample_data(phy.f)$PCA4 <- gsub(" Site 8",PCA4[5,1],as.character(data.frame(sample_data(phy.f))$PCA4))
-# sample_data(phy.f)$PCA4 <- gsub(" Site 9",PCA4[6,1],as.character(data.frame(sample_data(phy.f))$PCA4))
+sample_data(phy.f)$PCA4 <- sample_data(phy.f)$Site
+sample_data(phy.f)$PCA4 <- gsub(" Site 1",PCA4[1,1],as.character(data.frame(sample_data(phy.f))$PCA4))
+sample_data(phy.f)$PCA4 <- gsub(" Site 2",PCA4[2,1],as.character(data.frame(sample_data(phy.f))$PCA4))
+sample_data(phy.f)$PCA4 <- gsub(" Site 3",PCA4[3,1],as.character(data.frame(sample_data(phy.f))$PCA4))
+sample_data(phy.f)$PCA4 <- gsub(" Site 7",PCA4[4,1],as.character(data.frame(sample_data(phy.f))$PCA4))
+sample_data(phy.f)$PCA4 <- gsub(" Site 8",PCA4[5,1],as.character(data.frame(sample_data(phy.f))$PCA4))
+sample_data(phy.f)$PCA4 <- gsub(" Site 9",PCA4[6,1],as.character(data.frame(sample_data(phy.f))$PCA4))
+
+# Append temperature data
+sample_data(phy.f)$mean <- sample_data(phy.f)$Site
+sample_data(phy.f)$mean <- gsub(" Site 1",temp.summ[1,1],as.character(data.frame(sample_data(phy.f))$mean))
+sample_data(phy.f)$mean <- gsub(" Site 2",temp.summ[2,1],as.character(data.frame(sample_data(phy.f))$mean))
+sample_data(phy.f)$mean <- gsub(" Site 3",temp.summ[3,1],as.character(data.frame(sample_data(phy.f))$mean))
+sample_data(phy.f)$mean <- gsub(" Site 7",temp.summ[4,1],as.character(data.frame(sample_data(phy.f))$mean))
+sample_data(phy.f)$mean <- gsub(" Site 8",temp.summ[5,1],as.character(data.frame(sample_data(phy.f))$mean))
+sample_data(phy.f)$mean <- gsub(" Site 9",temp.summ[6,1],as.character(data.frame(sample_data(phy.f))$mean))
+
+sample_data(phy.f)$var <- sample_data(phy.f)$Site
+sample_data(phy.f)$var <- gsub(" Site 1",temp.summ[1,2],as.character(data.frame(sample_data(phy.f))$var))
+sample_data(phy.f)$var <- gsub(" Site 2",temp.summ[2,2],as.character(data.frame(sample_data(phy.f))$var))
+sample_data(phy.f)$var <- gsub(" Site 3",temp.summ[3,2],as.character(data.frame(sample_data(phy.f))$var))
+sample_data(phy.f)$var <- gsub(" Site 7",temp.summ[4,2],as.character(data.frame(sample_data(phy.f))$var))
+sample_data(phy.f)$var <- gsub(" Site 8",temp.summ[5,2],as.character(data.frame(sample_data(phy.f))$var))
+sample_data(phy.f)$var <- gsub(" Site 9",temp.summ[6,2],as.character(data.frame(sample_data(phy.f))$var))
+
+sample_data(phy.f)$skew <- sample_data(phy.f)$Site
+sample_data(phy.f)$skew <- gsub(" Site 1",temp.summ[1,5],as.character(data.frame(sample_data(phy.f))$skew))
+sample_data(phy.f)$skew <- gsub(" Site 2",temp.summ[2,5],as.character(data.frame(sample_data(phy.f))$skew))
+sample_data(phy.f)$skew <- gsub(" Site 3",temp.summ[3,5],as.character(data.frame(sample_data(phy.f))$skew))
+sample_data(phy.f)$skew <- gsub(" Site 7",temp.summ[4,5],as.character(data.frame(sample_data(phy.f))$skew))
+sample_data(phy.f)$skew <- gsub(" Site 8",temp.summ[5,5],as.character(data.frame(sample_data(phy.f))$skew))
+sample_data(phy.f)$skew <- gsub(" Site 9",temp.summ[6,5],as.character(data.frame(sample_data(phy.f))$skew))
+
+sample_data(phy.f)$dip <- sample_data(phy.f)$Site
+sample_data(phy.f)$dip <- gsub(" Site 1",temp.summ[1,6],as.character(data.frame(sample_data(phy.f))$dip))
+sample_data(phy.f)$dip <- gsub(" Site 2",temp.summ[2,6],as.character(data.frame(sample_data(phy.f))$dip))
+sample_data(phy.f)$dip <- gsub(" Site 3",temp.summ[3,6],as.character(data.frame(sample_data(phy.f))$dip))
+sample_data(phy.f)$dip <- gsub(" Site 7",temp.summ[4,6],as.character(data.frame(sample_data(phy.f))$dip))
+sample_data(phy.f)$dip <- gsub(" Site 8",temp.summ[5,6],as.character(data.frame(sample_data(phy.f))$dip))
+sample_data(phy.f)$dip <- gsub(" Site 9",temp.summ[6,6],as.character(data.frame(sample_data(phy.f))$dip))
+
+sample_data(phy.f)$daily.mean.min <- sample_data(phy.f)$Site
+sample_data(phy.f)$daily.mean.min <- gsub(" Site 1",temp.summ[1,7],as.character(data.frame(sample_data(phy.f))$daily.mean.min))
+sample_data(phy.f)$daily.mean.min <- gsub(" Site 2",temp.summ[2,7],as.character(data.frame(sample_data(phy.f))$daily.mean.min))
+sample_data(phy.f)$daily.mean.min <- gsub(" Site 3",temp.summ[3,7],as.character(data.frame(sample_data(phy.f))$daily.mean.min))
+sample_data(phy.f)$daily.mean.min <- gsub(" Site 7",temp.summ[4,7],as.character(data.frame(sample_data(phy.f))$daily.mean.min))
+sample_data(phy.f)$daily.mean.min <- gsub(" Site 8",temp.summ[5,7],as.character(data.frame(sample_data(phy.f))$daily.mean.min))
+sample_data(phy.f)$daily.mean.min <- gsub(" Site 9",temp.summ[6,7],as.character(data.frame(sample_data(phy.f))$daily.mean.min))
+
+sample_data(phy.f)$daily.mean.max <- sample_data(phy.f)$Site
+sample_data(phy.f)$daily.mean.max <- gsub(" Site 1",temp.summ[1,8],as.character(data.frame(sample_data(phy.f))$daily.mean.max))
+sample_data(phy.f)$daily.mean.max <- gsub(" Site 2",temp.summ[2,8],as.character(data.frame(sample_data(phy.f))$daily.mean.max))
+sample_data(phy.f)$daily.mean.max <- gsub(" Site 3",temp.summ[3,8],as.character(data.frame(sample_data(phy.f))$daily.mean.max))
+sample_data(phy.f)$daily.mean.max <- gsub(" Site 7",temp.summ[4,8],as.character(data.frame(sample_data(phy.f))$daily.mean.max))
+sample_data(phy.f)$daily.mean.max <- gsub(" Site 8",temp.summ[5,8],as.character(data.frame(sample_data(phy.f))$daily.mean.max))
+sample_data(phy.f)$daily.mean.max <- gsub(" Site 9",temp.summ[6,8],as.character(data.frame(sample_data(phy.f))$daily.mean.max))
+
+sample_data(phy.f)$daily.mean.range <- sample_data(phy.f)$Site
+sample_data(phy.f)$daily.mean.range <- gsub(" Site 1",temp.summ[1,9],as.character(data.frame(sample_data(phy.f))$daily.mean.range))
+sample_data(phy.f)$daily.mean.range <- gsub(" Site 2",temp.summ[2,9],as.character(data.frame(sample_data(phy.f))$daily.mean.range))
+sample_data(phy.f)$daily.mean.range <- gsub(" Site 3",temp.summ[3,9],as.character(data.frame(sample_data(phy.f))$daily.mean.range))
+sample_data(phy.f)$daily.mean.range <- gsub(" Site 7",temp.summ[4,9],as.character(data.frame(sample_data(phy.f))$daily.mean.range))
+sample_data(phy.f)$daily.mean.range <- gsub(" Site 8",temp.summ[5,9],as.character(data.frame(sample_data(phy.f))$daily.mean.range))
+sample_data(phy.f)$daily.mean.range <- gsub(" Site 9",temp.summ[6,9],as.character(data.frame(sample_data(phy.f))$daily.mean.range))
+
+sample_data(phy.f)$daysover30 <- sample_data(phy.f)$Site
+sample_data(phy.f)$daysover30 <- gsub(" Site 1",temp.summ[1,10],as.character(data.frame(sample_data(phy.f))$daysover30))
+sample_data(phy.f)$daysover30 <- gsub(" Site 2",temp.summ[2,10],as.character(data.frame(sample_data(phy.f))$daysover30))
+sample_data(phy.f)$daysover30 <- gsub(" Site 3",temp.summ[3,10],as.character(data.frame(sample_data(phy.f))$daysover30))
+sample_data(phy.f)$daysover30 <- gsub(" Site 7",temp.summ[4,10],as.character(data.frame(sample_data(phy.f))$daysover30))
+sample_data(phy.f)$daysover30 <- gsub(" Site 8",temp.summ[5,10],as.character(data.frame(sample_data(phy.f))$daysover30))
+sample_data(phy.f)$daysover30 <- gsub(" Site 9",temp.summ[6,10],as.character(data.frame(sample_data(phy.f))$daysover30))
+
+sample_data(phy.f)$daysunder27.5 <- sample_data(phy.f)$Site
+sample_data(phy.f)$daysunder27.5 <- gsub(" Site 1",temp.summ[1,13],as.character(data.frame(sample_data(phy.f))$daysunder27.5))
+sample_data(phy.f)$daysunder27.5 <- gsub(" Site 2",temp.summ[2,13],as.character(data.frame(sample_data(phy.f))$daysunder27.5))
+sample_data(phy.f)$daysunder27.5 <- gsub(" Site 3",temp.summ[3,13],as.character(data.frame(sample_data(phy.f))$daysunder27.5))
+sample_data(phy.f)$daysunder27.5 <- gsub(" Site 7",temp.summ[4,13],as.character(data.frame(sample_data(phy.f))$daysunder27.5))
+sample_data(phy.f)$daysunder27.5 <- gsub(" Site 8",temp.summ[5,13],as.character(data.frame(sample_data(phy.f))$daysunder27.5))
+sample_data(phy.f)$daysunder27.5 <- gsub(" Site 9",temp.summ[6,13],as.character(data.frame(sample_data(phy.f))$daysunder27.5))
+
 
 ```
 
@@ -360,6 +440,23 @@ plot_ordination(phy100.f.t, ord, color="Species", shape="Site",
 #phy.f.acr <- subset_samples(phy.f,Species=="Acropora")
 #ord3 <- ordinate(phy.f.acr, "NMDS", distance = "bray", trymax=100)
 #plot_ordination(phy.f.acr, ord3)
+
+## Now look at Acropora and Porites separately
+phy.f.porites <- subset_samples(phy.f,Species=="Porties")
+phy.f.acropora <- subset_samples(phy.f,Species=="Acropora")
+ord.porites <- ordinate(phy.f.porites,"PCoA", "wunifrac")
+ord.acropora <- ordinate(phy.f.acropora,"PCoA", "wunifrac")
+
+plot_ordination(phy.f.porites,ord.porites,color="Site",type="sample",
+                title="97% within-sample OTUs, Porites only")
+plot_ordination(phy.f.porites,ord.porites,color="Clade",type="species",
+                title="97% within-sample OTUs, Porites only")
+
+plot_ordination(phy.f.acropora,ord.acropora,color="Site",type="sample",
+                title="97% within-sample OTUs, acropora only")
+plot_ordination(phy.f.acropora,ord.acropora,color="Clade",type="species",
+                title="97% within-sample OTUs, acropora only")
+
 
 ```
 
@@ -561,3 +658,33 @@ points(temp.summ$var, acrobdiv$sambdsumm$mean, col="red")
 
 ```
 
+Constrained ordination - do temperature metrics drive community structure?
+```{r}
+### Now try constrained ordination 
+phy.f.porites <- subset_samples(phy.f,Species=="Porties")
+phy.f.acropora <- subset_samples(phy.f,Species=="Acropora")
+
+## Constrained ordination
+# Ordinate using first for principal components of the temperature metrics
+ord.CAP <- ordinate(phy.f,method="CAP",distance="wunifrac",formula= ~ PCA1 + PCA2 + PCA3 + PCA4)
+plot_ordination(phy.f, ord.CAP, color="Species", shape="Site",type="scree",
+                title="97% within-sample OTUs - CAP")
+# Ordinate using all temperature metrics included in PCA above (just to see if it's different)
+ord.CAP2 <- ordinate(phy.f,method="CAP",distance="wunifrac",formula= ~ mean + var + skew + dip + daily.mean.min + daily.mean.max + daily.mean.range + daysover30 + daysunder27.5)
+plot_ordination(phy.f, ord.CAP2, color="Species", shape="Site",type="scree",
+                title="97% within-sample OTUs - CAP")
+### For both of these constrained analyses, it looks like temperature metrics account for approximately 11% of the variability, but there is a large amount of variability that does not fit into the constrained axes.
+# This may be due to species differences, so next we try each species individually
+ord.porites.CAP <- ordinate(phy.f.porites,method="CAP",distance="wunifrac",formula= ~ PCA1 + PCA2 + PCA3 + PCA4)
+plot_ordination(phy.f.porites, ord.porites.CAP, color="Species", shape="Site",type="scree",
+                title="97% within-sample OTUs - CAP Porites only")
+plot_ordination(phy.f.porites, ord.porites.CAP, color="nclades", shape="Site",
+                title="97% within-sample OTUs - CAP Porites only")
+# Now temperature accounts for about 30% of the variability in Porites-associated Symbiodinium communities
+ord.acropora.CAP <- ordinate(phy.f.acropora,method="CAP",distance="wunifrac",formula= ~ PCA1 + PCA2 + PCA3 + PCA4)
+plot_ordination(phy.f.acropora, ord.acropora.CAP, color="Species", shape="Site",type="scree",
+                title="97% within-sample OTUs - CAP Acropora only")
+plot_ordination(phy.f.acropora, ord.acropora.CAP, color="nclades", shape="Site",
+                title="97% within-sample OTUs - CAP Acropora only")
+# Now temperature accounts for almost 40% of the variability in Acropora-associated Symbidoinium communities
+```
