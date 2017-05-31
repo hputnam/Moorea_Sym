@@ -17,15 +17,19 @@ options(stringsAsFactors = FALSE)
 taxcolors <- matrix(c("#8dd3c7", "#bebada", "#fb8072"), 
                     dimnames=list(c("CladeA", "CladeC", "CladeD")))
 
+load("Data/Moorea_sym100_f.RData")  # loads phyloseq object named phy.f
+phy100.f <- phy.f # renames to phy100.f
 load("Data/Moorea_sym_f.RData")  # loads phyloseq object named phy.f
 load("tempdata.RData") # loads the temperature data from temperature_analysis
 
 
 # Convert to proportion (relative abundance)
 phy.f.p <- transform_sample_counts(phy.f, function(x) x/sum(x))
+phy100.f.p <- transform_sample_counts(phy100.f, function(x) x/sum(x))
 # Apply transformation function
 transform <- function(x) sqrt(x/sum(x))  # Set transformation function
 phy.f.t <- transform_sample_counts(phy.f, transform)  # Transform data
+phy100.f.t <- transform_sample_counts(phy100.f, transform)  # Transform data
 
 write.table(data.frame(tax_table(phy.f)), "Data/tax.table.txt", row.names=T, quote=F)
 
@@ -335,6 +339,37 @@ sample_data(phy.f)$daysunder27.5 <- gsub(" Site 9",temp.summ[6,13],as.character(
 
 ```
 
+# Temperature regime spider plot
+```{r}
+# Library
+library(fmsb)
+
+temp.summ2 <- rbind(apply(temp.summ, 2, range), temp.summ)
+
+sitecols <- c("#762a83", "#9970ab", "#c2a5cf", "#a6dba0", "#5aae61", "#1b7837")
+
+radarchart(
+  temp.summ2[,c("var", "daysunder27.5",
+                "dip", "daily.mean.min", "mean", "daily.mean.max", "skew", "daysover30")],
+  #custom polygon
+  plwd=4, plty=1,
+  
+  #custom colors
+  pcol=sitecols,
+  pfcol=scales::alpha(sitecols, 0.25),
+ 
+  #custom the grid
+  cglcol="grey", cglty=1, axislabcol="grey", caxislabels=seq(0,20,5), cglwd=0.8,
+ 
+  #custom labels
+  vlcex=0.8 
+)
+
+legend("topright", rownames(temp.summ2)[-(1:2)])
+
+```
+
+
 # Multivariate analyses
 ```{r, echo=FALSE, message=F}
 library(vegan)
@@ -477,10 +512,11 @@ points(pca.temp$x[,3], acropora.evenness$x, col="red")
 ### Does number of clades correspond to temperature regime?
 ```{r}
 # Get and count clades present in each sample
+clades <- apply(data.frame(otu_table(phy.f), check.names=F), 2, function(x) {
+  unique(data.frame(tax_table(phy.f))[names(which(x!=0)), "Clade"])
+})
+
 sample_data(phy.f) <- within(sample_data(phy.f), {
-  clades <- apply(data.frame(otu_table(phy.f), check.names=F), 2, function(x) {
-    unique(data.frame(tax_table(phy.f))[names(which(x!=0)), "Clade"])
-  })
   nclades <- sapply(clades, length)
 })
 
