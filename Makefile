@@ -1,10 +1,14 @@
 all: RAnalysis/Data/Moorea_97glo_sym.RData RAnalysis/Data/Moorea_sym.RData RAnalysis/Data/Moorea_sym100.RData
 
-# Filter out sequences that are not Symbiodinium from 97% OTUs
+# Filter out low read count taxa and samples from 97% within-sample OTUs
+RAnalysis/Data/Moorea_sym_f.RData: RAnalysis/Data/Moorea_sym.RData
+	R --vanilla < Bioinf/filter_phy.R
+
+# Filter out sequences that are not Symbiodinium from 97% within-sample OTUs
 RAnalysis/Data/Moorea_sym.RData: RAnalysis/Data/Moorea.RData Bioinf/clust/all_rep_set_rep_set.fasta
 	R --vanilla < ~/SymITS2/filter_notsym.R --args $^ RAnalysis/Data/Moorea_sym.RData $NT_PATH
 
-# Build phyloseq object for 97% OTUs
+# Build phyloseq object for 97% within-sample OTUs
 RAnalysis/Data/Moorea.RData: Bioinf/clust/all_rep_set_rep_set_nw_tophits.tsv RAnalysis/Data/Moorea_sample_info.tsv 
 	R --vanilla < ~/SymITS2/build_phyloseq.R --args \
 	Bioinf/clust/all_rep_set_rep_set_nw_tophits.tsv \

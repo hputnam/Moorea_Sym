@@ -8,84 +8,24 @@ output: html_document
 ```{r load}
 library(phyloseq)
 library(multcompView)
+library(seqinr)
+library(phangorn) 
+library(caroline)
+
 options(stringsAsFactors = FALSE)
 
 taxcolors <- matrix(c("#8dd3c7", "#bebada", "#fb8072"), 
                     dimnames=list(c("CladeA", "CladeC", "CladeD")))
 
-options(stringsAsFactors = FALSE)
-
-load("Data/Moorea_sym100.RData")  # Load 100% OTUs phyloseq object
-phy100.f <- phy.f  # Rename 100% OTUs as phy100.f
-load("Data/Moorea_sym.RData")  # loads phyloseq object named phy.f
+load("Data/Moorea_sym_f.RData")  # loads phyloseq object named phy.f
 load("tempdata.RData") # loads the temperature data from temperature_analysis
 
-library(seqinr)
-library(phangorn) 
-library(caroline)
-
-# MOVE FILTERING TO MAKE FILE #
-# Filter OTUs by minimum count
-# Set threshold count
-n <- 10
-# Identify OTUs below threshold count
-taxa <- taxa_sums(phy.f)[which(taxa_sums(phy.f) >= n)]
-# Remove taxa below threshold count
-phy.f <- prune_taxa(names(taxa), phy.f)
-# Identify OTUs below threshold count
-taxa <- taxa_sums(phy100.f)[which(taxa_sums(phy100.f) >= n)]
-# Remove taxa below threshold count
-phy100.f <- prune_taxa(names(taxa), phy100.f)
-
-
-# Filter samples by minimum count
-# Set threshold number of reads
-sn <- 300
-# Remove samples with fewer reads than threshold
-phy.f <- prune_samples(sample_sums(phy.f)>=sn, phy.f)
-# Remove samples with fewer reads than threshold
-phy100.f <- prune_samples(sample_sums(phy100.f)>=sn, phy100.f)
-
-
-# Filter OTUs by minimum count again in case any dropped below threshold after filtering samples
-# Identify OTUs below threshold count
-taxa <- taxa_sums(phy.f)[which(taxa_sums(phy.f) >= n)]
-# Remove taxa below threshold count
-phy.f <- prune_taxa(names(taxa), phy.f)
-# Identify OTUs below threshold count
-taxa <- taxa_sums(phy100.f)[which(taxa_sums(phy100.f) >= n)]
-# Remove taxa below threshold count
-phy100.f <- prune_taxa(names(taxa), phy100.f)
-
-
-# Label clades and subtypes for filtered phyloseq object tax_tables
-get.st <- function(df) {
-  within(df, {
-    Clade <- substr(hit, 1, 1)
-    Subtype <- gsub(hit, pattern="_[A-Z]{2}[0-9]{6}", replacement="")
-    Subtype <- gsub(Subtype, pattern="_multiple", replacement="")
-    Subtype2 <- ifelse(as.numeric(sim)==100, paste0("'", Subtype, "'"),
-                       paste0("'[", rep(rle(sort(Subtype))$values, times=rle(sort(Subtype))$lengths), "]'^", 
-                              unlist(lapply(rle(sort(Subtype))$lengths, seq_len)))[order(order(Subtype))])
-    #Subtype <- ifelse(as.numeric(sim)==100, Subtype, paste("*", Subtype, sep=""))
-  })
-}
-
-tax_table(phy.f) <- as.matrix(get.st(data.frame(tax_table(phy.f), stringsAsFactors=FALSE)))
-tax_table(phy100.f) <- as.matrix(get.st(data.frame(tax_table(phy100.f), stringsAsFactors=FALSE)))
 
 # Convert to proportion (relative abundance)
 phy.f.p <- transform_sample_counts(phy.f, function(x) x/sum(x))
 # Apply transformation function
 transform <- function(x) sqrt(x/sum(x))  # Set transformation function
 phy.f.t <- transform_sample_counts(phy.f, transform)  # Transform data
-# Convert to proportion (relative abundance)
-phy100.f.p <- transform_sample_counts(phy100.f, function(x) x/sum(x))
-# Apply transformation function
-transform <- function(x) sqrt(x/sum(x))  # Set transformation function
-phy100.f.t <- transform_sample_counts(phy100.f, transform)  # Transform data
-
-plot_bar(phy.f.p, fill="Subtype", facet_grid=~Species)
 
 write.table(data.frame(tax_table(phy.f)), "Data/tax.table.txt", row.names=T, quote=F)
 
