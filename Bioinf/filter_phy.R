@@ -1,8 +1,11 @@
 library(phyloseq)
 options(stringsAsFactors = FALSE)
 
+# Get command line arguments
+args = commandArgs(trailingOnly=TRUE)
+
 # Load 97%-within-sample OTUs as phyloseq object named phy.f
-load("RAnalysis/Data/Moorea_sym.RData")  
+load(args[1])  
 
 # Filter OTUs by minimum count
 # Set threshold count
@@ -40,4 +43,4 @@ get.st <- function(df) {
 tax_table(phy.f) <- as.matrix(get.st(data.frame(tax_table(phy.f), stringsAsFactors=FALSE)))
 
 # Save filtered phyloseq object
-save(phy.f, file = "RAnalysis/Data/Moorea_sym_f.RData")
+save(phy.f, file = args[2])
