@@ -2,7 +2,11 @@ all: RAnalysis/Data/Moorea_97glo_sym.RData RAnalysis/Data/Moorea_sym.RData RAnal
 
 # Filter out low read count taxa and samples from 97% within-sample OTUs
 RAnalysis/Data/Moorea_sym_f.RData: RAnalysis/Data/Moorea_sym.RData
-	R --vanilla < Bioinf/filter_phy.R
+	R --vanilla < Bioinf/filter_phy.R --args $< RAnalysis/Data/Moorea_sym_f.RData
+
+# Filter out low read count taxa and samples from 100% within-sample OTUs
+RAnalysis/Data/Moorea_sym100_f.RData: RAnalysis/Data/Moorea_sym100.RData
+	R --vanilla < Bioinf/filter_phy.R --args $< RAnalysis/Data/Moorea_sym100_f.RData
 
 # Filter out sequences that are not Symbiodinium from 97% within-sample OTUs
 RAnalysis/Data/Moorea_sym.RData: RAnalysis/Data/Moorea.RData Bioinf/clust/all_rep_set_rep_set.fasta
