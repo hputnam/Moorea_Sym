@@ -1,0 +1,456 @@
+---
+title: "data_analysis.Rmd"
+author: "Ross Cunning"
+date: "6/2/2017"
+output: html_document
+---
+
+## Load packages and set options
+```{r setup}
+# Load libraries
+library(phyloseq)
+library(multcompView)
+library(seqinr)
+library(phangorn) 
+library(caroline)
+library(fmsb)
+library(vegan)
+
+# Set options
+options(stringsAsFactors = FALSE)
+
+# Set colors for plotting
+sitecolors <- c("#762a83", "#9970ab", "#c2a5cf", "#a6dba0", "#5aae61", "#1b7837")
+taxcolors <- matrix(c("#8dd3c7", "#bebada", "#fb8072"), 
+                    dimnames=list(c("CladeA", "CladeC", "CladeD")))
+```
+
+# Analyze temperature regimes at each site
+
+## Temperature data summary
+```{r temp_data}
+# Load temperature data
+load("tempdata.RData") # loads the temperature data from temperature_analysis
+
+# Plot temperature distributions for each site
+par(mfrow=c(2,3), mar=c(3,3,2,2), mgp=c(1.5,0.1,0), tcl=-0.2)
+hist(temp.all$Site.1, xlim=c(25,32), breaks=seq(25,32,0.25), 
+     main="Site 1", xlab="Temp °C")
+hist(temp.all$Site.2, xlim=c(25,32), breaks=seq(25,32,0.25), 
+     main="Site 2", xlab="Temp °C")
+hist(temp.all$Site.3, xlim=c(25,32), breaks=seq(25,32,0.25), 
+     main="Site 3", xlab="Temp °C")
+hist(temp.all$Site.7, xlim=c(25,32), breaks=seq(25,32,0.25), 
+     main="Site 7", xlab="Temp °C")
+hist(temp.all$Site.8, xlim=c(25,32), breaks=seq(25,32,0.25), 
+     main="Site 8", xlab="Temp °C")
+hist(temp.all$Site.9, xlim=c(25,32), breaks=seq(25,32,0.25), 
+     main="Site 9", xlab="Temp °C")
+
+# View Descriptive Stats
+temp.summ
+```
+
+## Multivariate temperature analysis
+### Principal component analysis
+```{r temp_pca}
+# Principal component analysis of temperature metrics
+
+## Set which temperature metrics to include in PCA
+include <- c("mean", "var", "dip", "daily.mean.min", 
+             "daily.mean.max", "daysover30", "daysunder27")
+
+## Subset temperature metrics for PCA
+temp <- as.data.frame(temp.summ[, include])
+
+## Run PCA
+pca.temp <- prcomp(temp, scale=TRUE)
+
+## Calculate loading values of original metrics
+aload <- abs(pca.temp$rotation)
+sweep(aload, 2, colSums(aload), "/")
+
+## Extract temperature PC values for each site
+temp.PCs <- pca.temp$x
+
+## Visualize PCA as biplot
+biplot(pca.temp)
+```
+
+### Temperature regime radar chart
+```{r}
+# Calculate ranges of each column
+temp2 <- rbind(apply(temp, 2, function(x) rev(range(x))), temp)
+# Reorder columns
+temp2 <- temp2[, c(3,4,1,6,2,5,7)]
+# Plot radar chart
+radarchart(
+  temp2,
+  
+  #custom polygon
+  plwd=4, plty=1,
+  
+  #custom colors
+  pcol=sitecolors,
+  pfcol=scales::alpha(sitecolors, 0.25),
+ 
+  #custom the grid
+  cglcol="grey", cglty=1, axislabcol="grey", cglwd=0.8,
+ 
+  #custom labels
+  vlcex=0.8 
+)
+
+legend("topright", rownames(temp2)[-(1:2)], lty=1, lwd=4, col=sitecolors, bty="n")
+
+```
+
+
+# Analyze *Symbiodinium* communities
+
+## Load *Symbiodinium* data
+```{r load_sym}
+# Load Symbiodinium data from saved phyloseq objects
+load("Data/Moorea_sym100_f.RData")  # loads phyloseq object for 100% OTUs named phy.f
+phy100.f <- phy.f # renames to phy100.f
+load("Data/Moorea_sym_f.RData")  # loads phyloseq object for 97%-within-sample OTUs named phy.f
+
+# Append site temperature metrics to sample_data in phyloseq objects
+site.levels <- as.numeric(sample_data(phy.f)$Site)
+sample_data(phy.f)$mean <- temp[site.levels, "mean"]
+sample_data(phy.f)$var <- temp[site.levels, "var"]
+sample_data(phy.f)$dip <- temp[site.levels, "dip"]
+sample_data(phy.f)$daily.mean.min <- temp[site.levels, "daily.mean.min"]
+sample_data(phy.f)$daily.mean.max <- temp[site.levels, "daily.mean.max"]
+sample_data(phy.f)$daysover30 <- temp[site.levels, "daysover30"]
+sample_data(phy.f)$daysunder27 <- temp[site.levels, "daysover30"]
+
+# Append site temperature PCs to sample_data in phyloseq objects
+sample_data(phy.f)$PC1 <- temp.PCs[site.levels, "PC1"]
+sample_data(phy.f)$PC2 <- temp.PCs[site.levels, "PC2"]
+sample_data(phy.f)$PC3 <- temp.PCs[site.levels, "PC3"]
+sample_data(phy.f)$PC4 <- temp.PCs[site.levels, "PC4"]
+sample_data(phy100.f)$PC1 <- temp.PCs[site.levels, "PC1"]
+sample_data(phy100.f)$PC2 <- temp.PCs[site.levels, "PC2"]
+sample_data(phy100.f)$PC3 <- temp.PCs[site.levels, "PC3"]
+sample_data(phy100.f)$PC4 <- temp.PCs[site.levels, "PC4"]
+
+# Convert OTU counts to proportions (relative abundances)
+phy.f.p <- transform_sample_counts(phy.f, function(x) x/sum(x))
+phy100.f.p <- transform_sample_counts(phy100.f, function(x) x/sum(x))
+# Square-root transform relative abundances
+transform <- function(x) sqrt(x/sum(x))  # Set transformation function
+phy.f.t <- transform_sample_counts(phy.f, transform)  # Transform data
+phy100.f.t <- transform_sample_counts(phy100.f, transform)  # Transform data
+```
+
+## Visualize *Symbiodinium* clade abundances
+The relative abundance of each clade in the entire dataset (normalized for differences in sequencing depth across samples).
+```{r clades}
+cladeAbund <- aggregate(data.frame(RelAbund=rowSums(otu_table(phy.f.p))),
+                        by=list(Clade=data.frame(tax_table(phy.f.p))$Clade), FUN=sum)
+cladeAbund$Prop <- prop.table(cladeAbund$RelAbund)
+cladeAbund[,-2]
+
+composition <- function(phy, col, legend=T) {
+  samdat <- data.frame(sample_data(phy))
+  #samdat$Genus <- factor(samdat$Genus, levels=rev(levels(samdat$Genus)))
+  samdat$Species <- factor(samdat$Species, levels=rev(levels(samdat$Species)))
+  samdat$Site <- factor(samdat$Site, levels=rev(levels(samdat$Site)))
+  samdat <- samdat[with(samdat, order(Species, Site, -DNA.ID)), ]
+  typerelabund <- as.matrix(otu_table(phy)[order(data.frame(tax_table(phy))$hit), 
+                                           rownames(samdat)])
+  sitebreaks <- c(as.character(samdat$Site), "X")==c("X", as.character(samdat$Site))
+  sitebreaks <- which(sitebreaks==F) - 1
+  spbreaks <- c(which(duplicated(samdat$Species)==F) - 1, nrow(samdat))
+  
+  # Make Barplot
+  barplot(typerelabund, horiz=T, space=0, axes=F,axisnames=F, yaxs="i", col=col)
+  rect(0, 0, par("usr")[2], par("usr")[4], lwd=1, xpd=T)
+  axis(side=1, at=seq(0, 1, 0.1), line=0, tck=-0.025, mgp=c(0,0.25,0), cex.axis=0.7)
+  mtext(side=1, "Relative abundance", cex=0.7, line=1)
+  # Add legend
+  if (legend==T) {
+    legend(x=par("usr")[2]/2, y=par("usr")[4], xjust=0.5, yjust=0.25, horiz=T, bty="n", xpd=T, 
+           cex=0.7, legend=c("A", "C", "D"), fill=taxcolors, x.intersp=0.5)
+    legend(x=par("usr")[2]*1.1, y=par("usr")[4]*0.75, xjust=0, yjust=0.1, bty="n", xpd=T, cex=1, 
+           pt.cex=1, legend=c("Site 1", "Site 2", "Site 3", "Site 7", "Site 8", "Site 9"), fill=sitecolors, y.intersp=0.7, 
+           x.intersp=0.3)
+  }
+  # Add grouping bars for Site
+  sitecolors <- matrix(sitecolors, 
+              dimnames=list(c(" Site 1", " Site 2", " Site 3", 
+                              " Site 7", " Site 8", " Site 9")))
+  for (i in 1:(length(sitebreaks)-1)) {
+    lines(c(0, 1), c(sitebreaks[i], sitebreaks[i]), lty=2, lwd=0.25)
+    rect(1.01, sitebreaks[i], 1.04, sitebreaks[i+1],
+         col=sitecolors[as.character(samdat$Site[sitebreaks[i]+1]),], 
+         lwd=0.25, xpd=T)
+  }
+  
+  # Add lines to separate species and species names
+  for (i in 1:length(spbreaks)) {
+    lines(c(0, 1.07), c(spbreaks[i], spbreaks[i]), xpd=T, type="l", lwd=0.4)
+    text(1.03, (spbreaks[i] + spbreaks[i+1]) / 2, xpd=T, pos=4, cex=0.8,
+         labels=paste(samdat$Genus[which(duplicated(samdat$Species)==F)][i], "\n",
+                      samdat$Species[which(duplicated(samdat$Species)==F)][i], sep=""))
+  }
+  for (i in 1:nrow(samdat)) {
+    text(0, i-0.5, rownames(samdat)[i], xpd=T, cex=0.7, pos=2)
+  }
+}
+
+par(mfrow=c(1,1), mar=c(2, 1.5, 2, 10), lwd=0.1, cex=0.7, xpd=NA)
+# Plot composition of 97% within-sample OTUs colored by clade
+composition(phy.f.p, col=taxcolors[factor(data.frame(tax_table(phy.f.p))[order(data.frame(tax_table(phy.f.p))$Subtype), ]$Clade, levels=c("A","C","D"))], legend=T)
+```
+
+## Build *Symbiodinium* phylogenetic tree
+```{r tree}
+#https://rdrr.io/rforge/seqinr/man/dist.alignment.html
+#returns sqrt of pairwise genetic distance, then squared the matrices
+A.seqs <- read.alignment(file = "Data/A_tree_seqs_aligned_clean.fasta", format= "fasta")
+A.dis <- (as.matrix(dist.alignment(A.seqs, matrix = "identity" )))^2
+write.csv(A.dis, file="Data/A.dis.matx.csv")
+
+C.seqs <- read.alignment(file = "Data/C_tree_seqs_aligned_clean.fasta", format= "fasta")
+C.dis <- (as.matrix(dist.alignment(C.seqs, matrix = "identity" )))^2
+write.csv(C.dis, file="Data/C.dis.matx.csv")
+
+D.seqs <- read.alignment(file = "Data/D_tree_seqs_aligned_clean.fasta", format= "fasta")
+D.dis <- (as.matrix(dist.alignment(D.seqs, matrix = "identity" )))^2
+write.csv(D.dis, file="D.dis.matx.csv")
+
+A_C <- matrix(0.1960, ncol=ncol(A.dis), nrow=nrow(C.dis), dimnames=list(rownames(C.dis), colnames(A.dis)))
+A_D <- matrix(0.1775, ncol=ncol(A.dis), nrow=nrow(D.dis), dimnames=list(rownames(D.dis), colnames(A.dis)))
+C_D <- matrix(0.1520, ncol=ncol(C.dis), nrow=nrow(D.dis), dimnames=list(rownames(D.dis), colnames(C.dis)))
+  
+#build ACD matrix
+col1 <- rbind(A.dis, A_C, A_D)
+col2 <- rbind(matrix(NA, nrow=nrow(A.dis), ncol=ncol(C.dis), dimnames=list(rownames(A.dis), colnames(C.dis))), C.dis, C_D)
+col3 <- rbind(matrix(NA, nrow=nrow(A.dis)+nrow(C.dis), ncol=ncol(D.dis), dimnames=list(c(rownames(A.dis), rownames(C.dis)), colnames(D.dis))), D.dis)
+
+ubermatrix <- cbind(col1, col2, col3)
+
+#build tree
+uber.tree <- phangorn::upgma(ubermatrix)
+
+# Slot uber tree into the phy_tree slot of the phyloseq object
+phy_tree(phy.f) <- phy_tree(uber.tree)
+phy_tree(phy.f.p) <- phy_tree(uber.tree)
+phy_tree(phy.f.t) <- phy_tree(uber.tree)
+```
+
+## Ordinate *Symbiodinium* communities
+```{r sym_ordination}
+# Separate Acropora and Porites
+phy.f.t.porites <- subset_samples(phy.f.t,Species=="Porties")
+phy.f.t.acropora <- subset_samples(phy.f.t,Species=="Acropora")
+
+# Principal coordinate analysis using weighted UniFrac distances
+
+## Acropora
+acr.ufdist <- UniFrac(phy.f.t.acropora, weighted=T, normalized=F, parallel=F, fast=T)
+acr.bd <- betadisper(d=acr.ufdist, group=sample_data(phy.f.t.acropora)$Site,
+                       type="centroid", bias.adjust=FALSE)
+plot(acr.bd, hull=F, label=F, col=sitecolors, seg.col=sitecolors,
+     main=expression(italic(Acropora:~~Symbiodinium)~"PCoA"),
+     xlab="PCoA 1", ylab="PCoA 2", sub="")
+legend("topright", bty="n", pch=1:6,
+       legend=levels(sample_data(phy.f.t.acropora)$Site),
+       col=sitecolors)
+
+## Porites
+por.ufdist <- UniFrac(phy.f.t.porites, weighted=T, normalized=F, parallel=F, fast=T)
+por.bd <- betadisper(d=por.ufdist, group=sample_data(phy.f.t.porites)$Site,
+                       type="centroid", bias.adjust=FALSE)
+plot(por.bd, hull=F, label=F, col=sitecolors, seg.col=sitecolors,
+     main=expression(italic(Porites:~~Symbiodinium)~"PCoA"),
+     xlab="PCoA 1", ylab="PCoA 2", sub="")
+legend("topright", bty="n", pch=1:6,
+       legend=levels(sample_data(phy.f.t.porites)$Site),
+       col=sitecolors)
+```
+
+## Test for differences in community composition among sites
+### (i.e., differences in multivariate *location*)
+```{r permanova}
+perms <- function(phy, group, trt) {
+  groups <- data.frame(sample_data(phy))[, group]
+  # Create data frame to populate with results
+  resdf <- data.frame(
+    matrix(ncol=7, nrow=nlevels(groups),
+           dimnames=list(levels(data.frame(sample_data(phy))[, group]), 
+                         c(group, "n", "overall", "within", "between", "R2", "p")))
+  )
+  # Compute within- and between-treatment statistics for each group
+  for (i in 1:nlevels(groups)) {
+    group.name <<- levels(groups)[i]
+    resdf[i, group] <- group.name
+    # make subsetted phyloseq object for individual group
+    phy.group <- phy 
+    samdat <- data.frame(sample_data(phy))
+    sample_data(phy.group) <- sample_data(samdat[samdat[[group]]==group.name, ])
+    samdat <- as(sample_data(phy.group), "data.frame") # sample data for subsetted phyloseq object
+    # calculate distances
+    ufdist <- phyloseq::distance(phy.group, "wunifrac")
+    resdf$n[i] <- nsamples(phy.group)
+    md <- meandist(ufdist, samdat[, trt])
+    resdf$within[i] <- summary(md)$W  # Weighted mean dissimilarity within treatments
+    resdf$between[i] <- summary(md)$B  # Mean dissimilarity between treatments
+    resdf$overall[i] <- summary(md)$D  # Overall dissimilarity
+    if (nlevels(as(sample_data(phy.group), "data.frame")[, trt]) > 1) {
+      permanova <- adonis(ufdist ~ get(trt), data=samdat, permutations=99999)
+      resdf$R2[i] <- permanova$aov.tab$"R2"[1]  # PERMANOVA partial R-squared
+      resdf$p[i] <- permanova$aov.tab$"Pr(>F)"[1]  # PERMANOVA p-value
+      #bd <- betadisper(ufdist, group=samdat[, trt])
+      #resdf$bd[i] <- TukeyHSD(bd)$group[4]
+    } else {
+      resdf$R2[i] <- NA
+      resdf$p[i] <- NA
+      #resdf$bd[i] <- NA
+    }
+  }
+  return(resdf)
+}
+
+perm.out <- perms(phy=phy.f.t, group="Species", trt="Site")
+perm.out
+```
+
+## Test for differences in community variability among sites
+### (i.e., differences in multivariate *dispersion*, or beta diversity)
+```{r betadisper}
+acr.bd.anova <- anova(acr.bd)
+acr.bdsumm <- aggregate(data.frame(mean=as.vector(acr.bd$distances)),
+                        by=list(group=acr.bd$group), FUN=mean)
+acr.bdsumm$se <- aggregate(as.vector(acr.bd$distances), by=list(group=acr.bd$group), 
+                           FUN=function(x) sd(x)/sqrt(length(x)))$x
+# Use permutations to perform pairwise comparisons of group mean dispersions
+acr.pt <- permutest(acr.bd, pairwise=T)
+acr.bdsumm$l <- multcompLetters(acr.pt$pairwise$permuted)$Letters
+  
+with(acr.bdsumm, {
+  plot(mean, type="n", ylim=c(0, 0.15), ylab="Distance to centroid", xaxt="n", 
+       xlab="Site", main=expression(italic(Acropora:~Symbiodinium)~beta-diversity))
+  arrows(1:6, mean - se, 1:6, mean + se, length=0.05, angle=90, code=3)
+  points(1:6, mean, cex=1, pch=21, bg=sitecolors)
+  axis(side=1, at=1:6, cex.axis=0.75, labels=group)
+  text(1:6, mean+se+0.015, l, cex=0.8)
+})
+
+
+## Porites
+por.bd.anova <- anova(por.bd)
+por.bdsumm <- aggregate(data.frame(mean=as.vector(por.bd$distances)),
+                        by=list(group=por.bd$group), FUN=mean)
+por.bdsumm$se <- aggregate(as.vector(por.bd$distances), by=list(group=por.bd$group), 
+                           FUN=function(x) sd(x)/sqrt(length(x)))$x
+# Use permutations to perform pairwise comparisons of group mean dispersions
+por.pt <- permutest(por.bd, pairwise=T)
+por.bdsumm$l <- multcompLetters(por.pt$pairwise$permuted)$Letters
+  
+with(por.bdsumm, {
+  plot(mean, type="n", ylim=c(0, 0.04), ylab="Distance to centroid", xaxt="n", 
+       xlab="Site", main=expression(italic(Porites:~Symbiodinium)~beta-diversity))
+  arrows(1:6, mean - se, 1:6, mean + se, length=0.05, angle=90, code=3)
+  points(1:6, mean, cex=1, pch=21, bg=sitecolors)
+  axis(side=1, at=1:6, cex.axis=0.75, labels=group)
+  text(1:6, mean+se+0.005, l, cex=0.8)
+})
+
+  
+```
+
+## Does beta diversity correspond to temperature regime?
+```{r plot.bd.temp}
+
+plot.bd.temp <- function(metric) {
+  acrdat <- data.frame(sample_data(phy.f.t.acropora))[, metric]
+  pordat <- data.frame(sample_data(phy.f.t.porites))[, metric]
+  plot(acr.bd$distances ~ acrdat, col="red", ylim=range(acr.bd$distances),
+       xlab=paste(metric, "(by Site)"), ylab="Distance to centroid")
+  points(por.bd$distances ~ pordat, col="black")
+  acr.mod <- lm(acr.bd$distances ~ acrdat)
+  acr.pval <- round(anova(acr.mod)$`Pr(>F)`[1], 3)
+  por.mod <- lm(por.bd$distances ~ pordat)
+  por.pval <- round(anova(por.mod)$`Pr(>F)`[1], 3)
+  if (acr.pval < 0.01) {  # If slope is significantly different from 0
+    abline(acr.mod, col="red")
+    legend("topleft", adj=c(0,1), bty="n", legend=paste("Acropora: p=", acr.pval), 
+           text.col="red")
+  }
+  if (por.pval < 0.01) {  # If slope is significantly different from 0
+    abline(por.mod, col="black")
+    legend("topleft", adj=c(0,3), bty="n", legend=paste("Porites: p=", por.pval))
+  }
+}
+
+# Plot beta diversity as a function of temperature PCs
+par(mfrow=c(2,2), mar=c(2.5,2.5,1,1), mgp=c(1.5,0.3,0), tcl=-0.2)
+plot.bd.temp("PC1")
+plot.bd.temp("PC2")
+plot.bd.temp("PC3")
+plot.bd.temp("PC4")
+
+# Plot beta diversity as a function of original temperature metrics
+par(mfrow=c(2,2), mar=c(2.5,2.5,1,1), mgp=c(1.5,0.3,0), tcl=-0.2)
+plot.bd.temp("var")
+plot.bd.temp("mean")
+plot.bd.temp("dip")
+plot.bd.temp("daysover30")
+plot.bd.temp("daysunder27")
+plot.bd.temp("daily.mean.max")
+plot.bd.temp("daily.mean.min")
+```
+
+
+
+
+## Constrained ordination - do temperature metrics drive differences in community structure?
+Danielle, can you help me understand constrained ordination, how it works, and how to interpret the results?
+```{r constrained_ordination}
+
+# try each species individually
+ord.porites.CAP <- ordinate(phy.f.t.porites,method="CAP",distance="wunifrac",formula= ~ PC1 + PC2 + PC3 + PC4)
+plot_ordination(phy.f.t.porites, ord.porites.CAP, color="nclades", shape="Site",
+                title="97% within-sample OTUs - CAP Porites only")
+# Now temperature accounts for about 24% of the variability in Porites-associated Symbiodinium communities
+ord.acropora.CAP <- ordinate(phy.f.t.acropora,method="CAP",distance="wunifrac",formula= ~ PC1 + PC2 + PC3 + PC4)
+
+plot_ordination(phy.f.t.acropora, ord.acropora.CAP, color="Species", shape="Site",type="scree",
+                title="97% within-sample OTUs - CAP Acropora only")
+plot_ordination(phy.f.t.acropora, ord.acropora.CAP, color="nclades", shape="Site",
+                title="97% within-sample OTUs - CAP Acropora only")
+# Now temperature accounts for almost 33% of the variability in Acropora-associated Symbidoinium communities
+
+# New idea for analysis: how much of the variability in Symbiodinium communities can be explained by "Site" alone?
+acropora.CAP.site <- ordinate(phy.f.t.acropora, method="CAP", distance="wunifrac",
+                              formula= ~ factor(Site))
+plot_ordination(phy.f.t.acropora, acropora.CAP.site, type="scree")
+explained.by.site <- with(summary(acropora.CAP.site), constr.chi/tot.chi)
+acropora.CAP.temp <- ordinate(phy.f.t.acropora, method="CAP", distance="wunifrac",
+                              formula= ~ PC1 + PC2 + PC3 + PC4)
+acropora.CAP.temp <- ordinate(phy.f.t.acropora, method="CAP", distance="wunifrac",
+                              formula= ~ mean + var + daysover30 + daysunder27 +
+                                         daily.mean.min + daily.mean.max + dip)
+plot_ordination(phy.f.t.acropora, acropora.CAP.temp, type="scree")
+explained.by.temp <- with(summary(acropora.CAP.temp), constr.chi/tot.chi)
+
+# How much of the variability explained by Site can be explained by Temp?
+explained.by.temp / explained.by.site
+# 100%? something seems fishy.
+
+
+
+# New idea for analysis: how much of the variability in Symbiodinium communities can be explained by "Site" alone?
+porites.CAP.site <- ordinate(phy.f.t.porites,method="CAP",distance="wunifrac",formula= ~ Site)
+explained.by.site <- with(summary(porites.CAP.site), constr.chi/tot.chi)
+porites.CAP.temp <- ordinate(phy.f.t.porites,method="CAP",distance="wunifrac",formula= ~ PC1 + PC2 + PC3 + PC4)
+porites.CAP.temp <- ordinate(phy.f.t.porites,method="CAP",distance="wunifrac",formula= ~ mean + var + daysover30 + daysunder27 + daily.mean.min + daily.mean.max + dip)
+explained.by.temp <- with(summary(porites.CAP.temp), constr.chi/tot.chi)
+
+# How much of the variability explained by Site can be explained by Temp?
+explained.by.temp / explained.by.site
+
+```
