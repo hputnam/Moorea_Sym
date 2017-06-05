@@ -65,6 +65,7 @@ temp <- as.data.frame(temp.summ[, include])
 
 ## Run PCA
 pca.temp <- prcomp(temp, scale=TRUE)
+screeplot(pca.temp)
 
 ## Calculate loading values of original metrics
 aload <- abs(pca.temp$rotation)
@@ -221,7 +222,8 @@ D.seqs <- read.alignment(file = "Data/D_tree_seqs_aligned_clean.fasta", format= 
 D.dis <- (as.matrix(dist.alignment(D.seqs, matrix = "identity" )))^2
 write.csv(D.dis, file="D.dis.matx.csv")
 
-A_C <- matrix(0.1960, ncol=ncol(A.dis), nrow=nrow(C.dis), dimnames=list(rownames(C.dis), colnames(A.dis)))
+#give clade distances using average 28s distance from Pochon and Gates 2010
+A_C <- matrix(0.1960, ncol=ncol(A.dis), nrow=nrow(C.dis), dimnames=list(rownames(C.dis), colnames(A.dis))) 
 A_D <- matrix(0.1775, ncol=ncol(A.dis), nrow=nrow(D.dis), dimnames=list(rownames(D.dis), colnames(A.dis)))
 C_D <- matrix(0.1520, ncol=ncol(C.dis), nrow=nrow(D.dis), dimnames=list(rownames(D.dis), colnames(C.dis)))
   
@@ -257,7 +259,7 @@ plot(acr.bd, hull=F, label=F, col=sitecolors, seg.col=sitecolors,
      main=expression(italic(Acropora:~~Symbiodinium)~"PCoA"),
      xlab="PCoA 1", ylab="PCoA 2", sub="")
 ordihull(acr.bd, sample_data(phy.f.t.acropora)$Site,  draw = c("polygon"),
-         col = sitecolors, alpha=0.1, lwd=0.05)
+         col = sitecolors, alpha=0.2, lwd=0.05)
 legend("topright", bty="n", pch=1:6,
        legend=levels(sample_data(phy.f.t.acropora)$Site),
        col=sitecolors)
@@ -270,7 +272,7 @@ plot(por.bd, hull=F, label=F, col=sitecolors, seg.col=sitecolors,
      main=expression(italic(Porites:~~Symbiodinium)~"PCoA"),
      xlab="PCoA 1", ylab="PCoA 2", sub="")
 ordihull(por.bd, sample_data(phy.f.t.porites)$Site,  draw = c("polygon"),
-         col = sitecolors, alpha=0.1, lwd=0.05)
+         col = sitecolors, alpha=0.2, lwd=0.05)
 legend("topright", bty="n", pch=1:6,
        legend=levels(sample_data(phy.f.t.porites)$Site),
        col=sitecolors)
@@ -366,7 +368,7 @@ with(por.bdsumm, {
   
 ```
 
-## What temperature metrics carry the most weight in describing beta diversity?
+## What temperature metrics (models) carry the most weight in describing beta diversity?
 ```{r model testing}
 library(lme4)
 library(MuMIn)
@@ -374,6 +376,7 @@ library(MuMIn)
 ufdist <- UniFrac(phy.f.t, weighted=T, normalized=F, parallel=F, fast=T)
 bd <- betadisper(d=ufdist, group=sample_data(phy.f.t)$Site,
                        type="centroid", bias.adjust=FALSE)
+
 temp.var <- as.data.frame(sample_data(phy.f.t)[, "var"])
 temp.mean <- as.data.frame(sample_data(phy.f.t)[, "mean"])
 temp.dip <- as.data.frame(sample_data(phy.f.t)[, "dip"])
@@ -384,20 +387,22 @@ temp.dmmin <- as.data.frame(sample_data(phy.f.t)[, "daily.mean.min"])
 species <- sample_data(phy.f.t)$Species
 site <- sample_data(phy.f.t)$Site
 
-mod.var <- lmer(bd$distances ~ temp.var$var*species + 1|site)
-mod.mean <- lmer(bd$distances ~ temp.mean$mean*species + 1|site)
-mod.dip <- lmer(bd$distances ~ temp.dip$dip*species + 1|site)
-mod.do30 <- lmer(bd$distances ~ temp.do30$daysover30*species + 1|site)
-mod.du27 <- lmer(bd$distances ~ temp.du27$daysunder27*species + 1|site)
-mod.dmmax <- lmer(bd$distances ~ temp.dmmax$daily.mean.max*species + 1|site)
-mod.dmmin <- lmer(bd$distances ~ temp.dmmin$daily.mean.min*species + 1|site)
+hist(log(bd$distances))
+
+mod.var <- lmer(log(bd$distances) ~ temp.var$var*species + 1|site)
+mod.mean <- lmer(log(bd$distances) ~ temp.mean$mean*species + 1|site)
+mod.dip <- lmer(log(bd$distances) ~ temp.dip$dip*species + 1|site)
+mod.do30 <- lmer(log(bd$distances) ~ temp.do30$daysover30*species + 1|site)
+mod.du27 <- lmer(log(bd$distances) ~ temp.du27$daysunder27*species + 1|site)
+mod.dmmax <- lmer(log(bd$distances) ~ temp.dmmax$daily.mean.max*species + 1|site)
+mod.dmmin <- lmer(log(bd$distances) ~ temp.dmmin$daily.mean.min*species + 1|site)
 
 mod.test <- AICc(mod.do30, mod.du27,mod.var, mod.dip, mod.dmmax, mod.dmmin, mod.mean,  k = 2, REML = T)
 mod.test$deltas <- round(mod.test$AICc-min(mod.test$AICc), 2)
 mod.test$weights <- Weights(mod.test$AICc)
 mod.test
 
-#essentially all models are equally likely... calls for use of PC1 and PC2?
+#essentially all models are equally likely... calls for use of PC1-PC4?
 
 ```
 
@@ -432,38 +437,43 @@ plot.bd.temp("PC2")
 plot.bd.temp("PC3")
 plot.bd.temp("PC4")
 
-# Plot beta diversity as a function of original temperature metrics
-par(mfrow=c(2,2), mar=c(2.5,2.5,1,1), mgp=c(1.5,0.3,0), tcl=-0.2)
-plot.bd.temp("var")
-plot.bd.temp("mean")
-plot.bd.temp("dip")
-plot.bd.temp("daysover30")
-plot.bd.temp("daysunder27")
-plot.bd.temp("daily.mean.max")
-plot.bd.temp("daily.mean.min")
+# # Plot beta diversity as a function of original temperature metrics
+# par(mfrow=c(2,2), mar=c(2.5,2.5,1,1), mgp=c(1.5,0.3,0), tcl=-0.2)
+# plot.bd.temp("var")
+# plot.bd.temp("mean")
+# plot.bd.temp("dip")
+# plot.bd.temp("daysover30")
+# plot.bd.temp("daysunder27")
+# plot.bd.temp("daily.mean.max")
+# plot.bd.temp("daily.mean.min")
 ```
-
-
 
 
 ## Constrained ordination - do temperature metrics drive differences in community structure?
 Danielle, can you help us understand constrained ordination, how it works, and how to interpret the results?
-```{r constrained_ordination}
+```{r constrained_ordination temperature metrics}
 
 # try each species individually
-ord.porites.CAP <- ordinate(phy.f.t.porites,method="CAP",distance="wunifrac",formula= ~ PC1 + PC2 + PC3 + PC4)
-plot_ordination(phy.f.t.porites, ord.porites.CAP, color="nclades", shape="Site",
+ord.porites.CAP <- ordinate(phy.f.t.porites,method="CAP",distance="wunifrac",formula= ~ PC1 + PC2 + PC3 +PC4)
+plot_ordination(phy.f.t.porites, ord.porites.CAP,  shape="Site",type="scree",
                 title="97% within-sample OTUs - CAP Porites only")
+
+plot_ordination(phy.f.t.porites, ord.porites.CAP, color="Site", shape="Site",
+                title="97% within-sample OTUs - CAP Porites only")
+
 # Now temperature accounts for about 24% of the variability in Porites-associated Symbiodinium communities
-ord.acropora.CAP <- ordinate(phy.f.t.acropora,method="CAP",distance="wunifrac",formula= ~ PC1 + PC2 + PC3 + PC4)
-
-plot_ordination(phy.f.t.acropora, ord.acropora.CAP, color="Species", shape="Site",type="scree",
+ord.acropora.CAP <- ordinate(phy.f.t.acropora,method="CAP",distance="wunifrac",formula= ~ PC1 + PC2 + PC3 +PC4)
+plot_ordination(phy.f.t.acropora, ord.acropora.CAP,  shape="Site",type="scree",
                 title="97% within-sample OTUs - CAP Acropora only")
-plot_ordination(phy.f.t.acropora, ord.acropora.CAP, color="nclades", shape="Site",
-                title="97% within-sample OTUs - CAP Acropora only")
-# Now temperature accounts for almost 33% of the variability in Acropora-associated Symbidoinium communities
 
-# New idea for analysis: how much of the variability in Symbiodinium communities can be explained by "Site" alone?
+plot_ordination(phy.f.t.acropora, ord.acropora.CAP, color="Site", shape="Site",
+                title="97% within-sample OTUs - CAP Acropora only")
+# Now temperature accounts for almost 33% of the variability in Acropora-associated Symbiodinium communities
+```
+
+## New idea for analysis: how much of the variability in Symbiodinium communities can be explained by "Site" alone?
+```{r constrained_ordination site}
+
 acropora.CAP.site <- ordinate(phy.f.t.acropora, method="CAP", distance="wunifrac",
                               formula= ~ factor(Site))
 plot_ordination(phy.f.t.acropora, acropora.CAP.site, type="scree")
