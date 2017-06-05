@@ -21,7 +21,7 @@ options(stringsAsFactors = FALSE)
 
 # Set colors for plotting
 sitecolors <- c("#762a83", "#9970ab", "#c2a5cf", "#a6dba0", "#5aae61", "#1b7837")
-taxcolors <- matrix(c("#8dd3c7", "#bebada", "#fb8072"), 
+taxcolors <- matrix(c("#dce84a", "#337be8", "#e83333"), 
                     dimnames=list(c("CladeA", "CladeC", "CladeD")))
 ```
 
@@ -256,6 +256,8 @@ acr.bd <- betadisper(d=acr.ufdist, group=sample_data(phy.f.t.acropora)$Site,
 plot(acr.bd, hull=F, label=F, col=sitecolors, seg.col=sitecolors,
      main=expression(italic(Acropora:~~Symbiodinium)~"PCoA"),
      xlab="PCoA 1", ylab="PCoA 2", sub="")
+ordihull(acr.bd, sample_data(phy.f.t.acropora)$Site,  draw = c("polygon"),
+         col = sitecolors, alpha=0.1, lwd=0.05)
 legend("topright", bty="n", pch=1:6,
        legend=levels(sample_data(phy.f.t.acropora)$Site),
        col=sitecolors)
@@ -267,6 +269,8 @@ por.bd <- betadisper(d=por.ufdist, group=sample_data(phy.f.t.porites)$Site,
 plot(por.bd, hull=F, label=F, col=sitecolors, seg.col=sitecolors,
      main=expression(italic(Porites:~~Symbiodinium)~"PCoA"),
      xlab="PCoA 1", ylab="PCoA 2", sub="")
+ordihull(por.bd, sample_data(phy.f.t.porites)$Site,  draw = c("polygon"),
+         col = sitecolors, alpha=0.1, lwd=0.05)
 legend("topright", bty="n", pch=1:6,
        legend=levels(sample_data(phy.f.t.porites)$Site),
        col=sitecolors)
@@ -362,6 +366,41 @@ with(por.bdsumm, {
   
 ```
 
+## What temperature metrics carry the most weight in describing beta diversity?
+```{r model testing}
+library(lme4)
+library(MuMIn)
+
+ufdist <- UniFrac(phy.f.t, weighted=T, normalized=F, parallel=F, fast=T)
+bd <- betadisper(d=ufdist, group=sample_data(phy.f.t)$Site,
+                       type="centroid", bias.adjust=FALSE)
+temp.var <- as.data.frame(sample_data(phy.f.t)[, "var"])
+temp.mean <- as.data.frame(sample_data(phy.f.t)[, "mean"])
+temp.dip <- as.data.frame(sample_data(phy.f.t)[, "dip"])
+temp.do30 <- as.data.frame(sample_data(phy.f.t)[, "daysover30"])
+temp.du27 <- as.data.frame(sample_data(phy.f.t)[, "daysunder27"])
+temp.dmmax <- as.data.frame(sample_data(phy.f.t)[, "daily.mean.max"])
+temp.dmmin <- as.data.frame(sample_data(phy.f.t)[, "daily.mean.min"])
+species <- sample_data(phy.f.t)$Species
+site <- sample_data(phy.f.t)$Site
+
+mod.var <- lmer(bd$distances ~ temp.var$var*species + 1|site)
+mod.mean <- lmer(bd$distances ~ temp.mean$mean*species + 1|site)
+mod.dip <- lmer(bd$distances ~ temp.dip$dip*species + 1|site)
+mod.do30 <- lmer(bd$distances ~ temp.do30$daysover30*species + 1|site)
+mod.du27 <- lmer(bd$distances ~ temp.du27$daysunder27*species + 1|site)
+mod.dmmax <- lmer(bd$distances ~ temp.dmmax$daily.mean.max*species + 1|site)
+mod.dmmin <- lmer(bd$distances ~ temp.dmmin$daily.mean.min*species + 1|site)
+
+mod.test <- AICc(mod.do30, mod.du27,mod.var, mod.dip, mod.dmmax, mod.dmmin, mod.mean,  k = 2, REML = T)
+mod.test$deltas <- round(mod.test$AICc-min(mod.test$AICc), 2)
+mod.test$weights <- Weights(mod.test$AICc)
+mod.test
+
+#essentially all models are equally likely... calls for use of PC1 and PC2?
+
+```
+
 ## Does beta diversity correspond to temperature regime?
 ```{r plot.bd.temp}
 
@@ -408,7 +447,7 @@ plot.bd.temp("daily.mean.min")
 
 
 ## Constrained ordination - do temperature metrics drive differences in community structure?
-Danielle, can you help me understand constrained ordination, how it works, and how to interpret the results?
+Danielle, can you help us understand constrained ordination, how it works, and how to interpret the results?
 ```{r constrained_ordination}
 
 # try each species individually

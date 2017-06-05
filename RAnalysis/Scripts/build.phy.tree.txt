@@ -1,11 +1,6 @@
 #working from Moorea_Sym
 
 # In Make file after filtering add these
-write.table(data.frame(otu_table(phy.f)), "otu_table.txt", row.names=T, quote=F)
-## Needs to be in biom format
-
-
-
 write.table(data.frame(tax_table(phy.f)), "tax_table.txt", row.names=T, quote=F)
 
 #Bioinf/clust/all_rep_set_rep_set.fasta = seqs
@@ -14,17 +9,12 @@ write.table(data.frame(tax_table(phy.f)), "tax_table.txt", row.names=T, quote=F)
 #awk '{print $1}' RAnalysis/Data/tax.table.txt = denovo name
 #awk '{print $8}' RAnalysis/Data/tax.table.txt = clade name
 
-#set ID list
-awk '{if (NR!=1) {print $1}}' RAnalysis/Data/tax.table.txt > RAnalysis/Data/tree_seq.ids
+#subset ID lists by clade
+awk '$9 ~ /^A/{ print $1; }' RAnalysis/Data/tax.table.txt > RAnalysis/Data/A_tree_seq.ids
+awk '$9 ~ /^C/{ print $1; }' RAnalysis/Data/tax.table.txt > RAnalysis/Data/C_tree_seq.ids
+awk '$9 ~ /^D/{ print $1; }' RAnalysis/Data/tax.table.txt > RAnalysis/Data/D_tree_seq.ids
 
-#set Clade ID lists
-awk '{if (NR!=1) {print $1}}' RAnalysis/Data/A_tax.table.txt > RAnalysis/Data/A_tree_seq.ids
-
-awk '$8 ~ /^A/{ print $1; }' RAnalysis/Data/tax.table.txt > RAnalysis/Data/A_tree_seq.ids
-awk '$8 ~ /^C/{ print $1; }' RAnalysis/Data/tax.table.txt > RAnalysis/Data/C_tree_seq.ids
-awk '$8 ~ /^D/{ print $1; }' RAnalysis/Data/tax.table.txt > RAnalysis/Data/D_tree_seq.ids
-
-
+#Run MACQIIME
 source /macqiime/configs/bash_profile.txt
 
 #filter seqs by id list
@@ -43,9 +33,15 @@ align_seqs.py -i RAnalysis/Data/C_tree_seqs.fasta -m muscle -o RAnalysis/Data/
 align_seqs.py -i RAnalysis/Data/D_tree_seqs.fasta -m muscle -o RAnalysis/Data/
 
 #remove extra header info from alignments
-sed 's/ .*//' A_tree_seqs_aligned.fasta > A_tree_seqs_aligned_clean.fasta
-sed 's/ .*//' C_tree_seqs_aligned.fasta > C_tree_seqs_aligned_clean.fasta
-sed 's/ .*//' D_tree_seqs_aligned.fasta > D_tree_seqs_aligned_clean.fasta
+sed 's/ .*//' RAnalysis/Data/A_tree_seqs_aligned.fasta > RAnalysis/Data/A_tree_seqs_aligned_clean.fasta
+sed 's/ .*//' RAnalysis/Data/C_tree_seqs_aligned.fasta > RAnalysis/Data/C_tree_seqs_aligned_clean.fasta
+sed 's/ .*//' RAnalysis/Data/D_tree_seqs_aligned.fasta > RAnalysis/Data/D_tree_seqs_aligned_clean.fasta
+
+
+
+
+
+
 
 #convert otu table to biom format
 https://www.bioconductor.org/packages/release/bioc/html/biomformat.html
