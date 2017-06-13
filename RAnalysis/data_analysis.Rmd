@@ -1,12 +1,12 @@
 ---
 title: "data_analysis.Rmd"
-author: "Ross Cunning"
-date: "6/2/2017"
+author: "Ross Cunning, Hollie Putnam, Danielle Claar"
+date: "6/13/2017"
 output: html_document
 ---
 
 ## Load packages and set options
-```{r setup}
+```{r setup, include=FALSE}
 # Load libraries
 library(phyloseq)
 library(multcompView)
@@ -15,6 +15,8 @@ library(phangorn)
 library(caroline)
 library(fmsb)
 library(vegan)
+library(lme4)
+library(MuMIn)
 
 # Set options
 options(stringsAsFactors = FALSE)
@@ -35,17 +37,17 @@ load("tempdata.RData") # loads the temperature data from temperature_analysis
 # Plot temperature distributions for each site
 par(mfrow=c(2,3), mar=c(3,3,2,2), mgp=c(1.5,0.1,0), tcl=-0.2)
 hist(temp.all$Site.1, xlim=c(25,32), breaks=seq(25,32,0.25), 
-     main="Site 1", xlab="Temp 째C")
+     main="Site 1", xlab="Temp 캜")
 hist(temp.all$Site.2, xlim=c(25,32), breaks=seq(25,32,0.25), 
-     main="Site 2", xlab="Temp 째C")
+     main="Site 2", xlab="Temp 캜")
 hist(temp.all$Site.3, xlim=c(25,32), breaks=seq(25,32,0.25), 
-     main="Site 3", xlab="Temp 째C")
+     main="Site 3", xlab="Temp 캜")
 hist(temp.all$Site.7, xlim=c(25,32), breaks=seq(25,32,0.25), 
-     main="Site 7", xlab="Temp 째C")
+     main="Site 7", xlab="Temp 캜")
 hist(temp.all$Site.8, xlim=c(25,32), breaks=seq(25,32,0.25), 
-     main="Site 8", xlab="Temp 째C")
+     main="Site 8", xlab="Temp 캜")
 hist(temp.all$Site.9, xlim=c(25,32), breaks=seq(25,32,0.25), 
-     main="Site 9", xlab="Temp 째C")
+     main="Site 9", xlab="Temp 캜")
 
 # View Descriptive Stats
 temp.summ
@@ -65,6 +67,7 @@ temp <- as.data.frame(temp.summ[, include])
 
 ## Run PCA
 pca.temp <- prcomp(temp, scale=TRUE)
+par(mfrow=c(1,1))
 screeplot(pca.temp)
 
 ## Calculate loading values of original metrics
@@ -364,15 +367,10 @@ with(por.bdsumm, {
   axis(side=1, at=1:6, cex.axis=0.75, labels=group)
   text(1:6, mean+se+0.005, l, cex=0.8)
 })
-
-  
 ```
 
 ## What temperature metrics (models) carry the most weight in describing beta diversity?
 ```{r model testing}
-library(lme4)
-library(MuMIn)
-
 ufdist <- UniFrac(phy.f.t, weighted=T, normalized=F, parallel=F, fast=T)
 bd <- betadisper(d=ufdist, group=sample_data(phy.f.t)$Site,
                        type="centroid", bias.adjust=FALSE)
@@ -450,25 +448,134 @@ plot.bd.temp("PC4")
 
 
 ## Constrained ordination - do temperature metrics drive differences in community structure?
-Danielle, can you help us understand constrained ordination, how it works, and how to interpret the results?
+Above, we use unconstrained ordinations (PCoA and/or NMDS) to look for relationships between samples. The unconstrained ordinations, however, do not provide a direct link to potential environmental factors influencing sample community structure.  
+Constrained ordination allows us to see how environmental variables (in our case, temperature metrics) are associated with changes in the community composition. In constrained ordination, the ordination axes are constrained to linear combinations of environmental variables.  
+Below, we construct a constrained ordination using our PCA temperature metrics, to see if any linear combinations between them are significant. We look at this for Acropora and Porites separately. The first figure for each coral species is the scree plot of eigenvalues: essentially how much variability is explaned by each of the constrained axes (CAP1-CAP4) after the constrained axes, the scree plot shows variability explained by unconstrained axes (MDS1-MDS16) - residual variability caused by factors that we did not include in our model.  
+After completing the ordination and plotting, we do a permutational ANOVA on constrained axes used in ordination. This tells us whether the model we have used is significant.  
+Ordistep is an automatic stepwise model building tool that can be used to build constrained ordinations. This is used because "Actually, constrained ordination methods do not have AIC, and therefore the step may not be trusted. This function provides an alternative using permutation P-values. http://cc.oulu.fi/~jarioksa/softhelp/vegan/html/ordistep.html" Also "Function ordistep defines the model, scope of models considered, and direction of the procedure similarly as step. The function alternates with drop and add steps and stops when the model was not changed during one step. The - and + signs in the summary table indicate which stage is performed. The number of permutations is selected adaptively with respect to the defined decision limit."
 ```{r constrained_ordination temperature metrics}
 
 # try each species individually
-ord.porites.CAP <- ordinate(phy.f.t.porites,method="CAP",distance="wunifrac",formula= ~ PC1 + PC2 + PC3 +PC4)
+# PORITES
+# First run model selection using PCs
+ord.porites.CAP <- ordinate(phy.f.t.porites,method="CAP",distance="wunifrac",formula= ~ PC1 + PC2 + PC3 + PC4)
 plot_ordination(phy.f.t.porites, ord.porites.CAP,  shape="Site",type="scree",
                 title="97% within-sample OTUs - CAP Porites only")
 
 plot_ordination(phy.f.t.porites, ord.porites.CAP, color="Site", shape="Site",
                 title="97% within-sample OTUs - CAP Porites only")
 
-# Now temperature accounts for about 24% of the variability in Porites-associated Symbiodinium communities
-ord.acropora.CAP <- ordinate(phy.f.t.acropora,method="CAP",distance="wunifrac",formula= ~ PC1 + PC2 + PC3 +PC4)
+anova(ord.porites.CAP)
+
+# In a model with all 4 PCs included, this model (Porites, PCs 1-4) is not significant at p=0.05, but is at p=0.1
+
+finalmodel.porites.PCs <- ordistep(ord.porites.CAP, formula= ~ PC1 + PC2 + PC3 + PC4, direction = c("both"), Pin = 0.05, Pout = 0.1, pstep = 100, perm.max = 1000, steps = 50, trace = TRUE)
+
+finalmodel.porites.PCs
+# With stepwise model selection, only PC1 is retained in the final model for Porites (PCs 1-4)
+
+# Now, we test to make sure that this model holds up
+#" Then, we can calculate Variance Inflation Factors (VIF) for each of the constraints (variables) from the "env" matrix (environmental matrix). If we find an environmental variable with VIF>10, we'll know that this variable presents colinearity with another or other variables. In that case, we would have to delete the variable from our initial dataset and redo all the analysis. http://rfunctions.blogspot.com/2016/11/canonical-correspondence-analysis-cca.html"
+# There's only one retained variable, so this is actually not needed in this case. If there was more than one, then this would be important. 
+vif.cca(finalmodel.porites.PCs)
+
+# Now, we need to test whether our whole model, terms, and axes are significant (explain more variance of our observations than by chance)
+# Testing the significance of the model:
+anova.cca(finalmodel.porites.PCs)
+# Testing the significance of terms (environmental variables):
+anova.cca(finalmodel.porites.PCs, by="terms")
+# Testing the significance of axes (at least the first two or three should present a significant p value):
+anova.cca(finalmodel.porites.PCs, by="axis")
+# Excellent, all of these test are significant. This means that the final model (Porites), distance ~ PC1 can be used.
+
+
+# Next try model selection using temperature metrics
+ord.porites.CAP2 <- ordinate(phy.f.t.porites,method="CAP",distance="wunifrac",formula= ~ mean+var+dip+daily.mean.min+daily.mean.max+daysover30+daysunder27)
+plot_ordination(phy.f.t.porites, ord.porites.CAP2,  shape="Site",type="scree",
+                title="97% within-sample OTUs - CAP Porites only")
+
+plot_ordination(phy.f.t.porites, ord.porites.CAP2, color="Site", shape="Site",
+                title="97% within-sample OTUs - CAP Porites only")
+
+anova(ord.porites.CAP2)
+
+# In a model with all 4 PCs included, this model (Porites, all temp metrics) is not significant at p=0.1
+
+finalmodel.porites.alltempmetrics <- ordistep(ord.porites.CAP2, formula= ~ mean+var+dip+daily.mean.min+daily.mean.max+daysover30+daysunder27, direction = c("both"), Pin = 0.05, Pout = 0.1, pstep = 100, perm.max = 1000, steps = 50, trace = TRUE)
+
+finalmodel.porites.alltempmetrics
+# With stepwise model selection, only daysunder27 is retained in the final model for Porites (all temp metrics)
+
+# Now, we test to make sure that this model holds up
+# There's only one retained variable, so this is actually not needed in this case. If there was more than one, then this would be important. 
+vif.cca(finalmodel.porites.alltempmetrics)
+
+# Now, we need to test whether our whole model, terms, and axes are significant (explain more variance of our observations than by chance)
+# Testing the significance of the model:
+anova.cca(finalmodel.porites.alltempmetrics)
+# Testing the significance of terms (environmental variables):
+anova.cca(finalmodel.porites.alltempmetrics, by="terms")
+# Testing the significance of axes (at least the first two or three should present a significant p value):
+anova.cca(finalmodel.porites.alltempmetrics, by="axis")
+# Excellent, all of these test are significant. This means that the final model (Porites), distance ~ daysunder27 can be used.
+
+
+
+
+# ACROPORA
+# First run model selection using PCs
+ord.acropora.CAP <- ordinate(phy.f.t.acropora,method="CAP",distance="wunifrac",formula= ~ PC1 + PC2 + PC3 + PC4)
 plot_ordination(phy.f.t.acropora, ord.acropora.CAP,  shape="Site",type="scree",
                 title="97% within-sample OTUs - CAP Acropora only")
 
 plot_ordination(phy.f.t.acropora, ord.acropora.CAP, color="Site", shape="Site",
                 title="97% within-sample OTUs - CAP Acropora only")
-# Now temperature accounts for almost 33% of the variability in Acropora-associated Symbiodinium communities
+
+anova(ord.acropora.CAP)
+
+# In a model with all 4 PCs included, this model (Acropora, PCs 1-4) is significant at p=0.05
+
+
+finalmodel.acropora.PCs<-ordistep(ord.acropora.CAP, formula= ~ PC1 + PC2 + PC3 + PC4, direction = c("both"), Pin = 0.05, Pout = 0.1, pstep = 100, perm.max = 1000, steps = 50, trace = TRUE)
+
+finalmodel.acropora.PCs
+# With stepwise model selection, PC2 and PC4 are retained in the final model for Acropora (PCs 1-4)
+
+# Now, we test to make sure that this model holds up
+vif.cca(finalmodel.acropora.PCs)
+# These are <10, so are not collinear. This makes sense, as we are using PCs, and they, by nature, should not be collinear...
+
+# Now, we need to test whether our whole model, terms, and axes are significant (explain more variance of our observations than by chance)
+# Testing the significance of the model:
+anova.cca(finalmodel.acropora.PCs)
+# Testing the significance of terms (environmental variables):
+anova.cca(finalmodel.acropora.PCs, by="terms")
+# Testing the significance of axes (at least the first two or three should present a significant p value):
+# anova.cca(finalmodel.acropora.PCs, by="axis") # For some reason this one doesn't work?
+# These test are significant. This means that the final model (Acropora), distance ~ PC2 + PC4 can be used.
+
+
+# Now we can look at individual temperature metrics (rather than PCs)
+ord.acropora.CAP2 <- ordinate(phy.f.t.acropora,method="CAP",distance="wunifrac",formula= ~ mean+var+dip+daily.mean.min+daily.mean.max+daysover30+daysunder27)
+plot_ordination(phy.f.t.acropora, ord.acropora.CAP2,  shape="Site",type="scree",
+                title="97% within-sample OTUs - CAP acropora only")
+
+plot_ordination(phy.f.t.acropora, ord.acropora.CAP2, color="Site", shape="Site",
+                title="97% within-sample OTUs - CAP acropora only")
+
+anova(ord.acropora.CAP2)
+
+# In a model with all temp metrics included, this model (Acropora, all temp metrics) is significant at p=0.05
+
+finalmodel.acropora.alltempmetrics<-ordistep(ord.acropora.CAP2, formula= ~ mean+var+dip+daily.mean.min+daily.mean.max+daysover30+daysunder27, direction = c("both"), Pin = 0.05, Pout = 0.1, pstep = 100, perm.max = 1000, steps = 50, trace = TRUE)
+
+finalmodel.acropora.alltempmetrics
+# With stepwise model selection, mean+daily.mean.min+daysover30+daysunder27 were retained in the final model for Acropora (all temp metrics)
+
+# Now, we test to make sure that this model holds up
+vif.cca(finalmodel.acropora.alltempmetrics)
+# These metrics are correlated. This is problematic, and may suggest that our PC approach is indeed better, as we deal with collinearity before ordination.
+
 ```
 
 ## New idea for analysis: how much of the variability in Symbiodinium communities can be explained by "Site" alone?
