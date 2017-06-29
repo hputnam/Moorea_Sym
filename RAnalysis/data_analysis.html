@@ -463,8 +463,8 @@ legend(&quot;topright&quot;, bty=&quot;n&quot;, pch=1:6,
 perm.out &lt;- perms(phy=phy.f.t, group=&quot;Species&quot;, trt=&quot;Site&quot;)
 perm.out</code></pre>
 <pre><code>##           Species  n   overall    within   between        R2       p
-## Acropora Acropora 26 0.5193570 0.3906389 0.5395122 0.4103000 0.02229
-## Porties   Porties 29 0.1228292 0.1184129 0.1235358 0.2706423 0.10656</code></pre>
+## Acropora Acropora 26 0.5193570 0.3906389 0.5395122 0.4103000 0.02199
+## Porties   Porties 29 0.1228292 0.1184129 0.1235358 0.2706423 0.10568</code></pre>
 </div>
 </div>
 <div id="test-for-differences-in-community-variability-among-sites" class="section level2">
@@ -658,7 +658,7 @@ plot_ordination(phy.f.t.porites, ord.porites.CAP,  shape=&quot;Site&quot;,type=&
 ## 
 ## Model: capscale(formula = distance ~ PC1 + PC2 + PC3 + PC4, data = data)
 ##          Df SumOfSqs      F Pr(&gt;F)  
-## Model     4 0.085942 2.0988  0.068 .
+## Model     4 0.085942 2.0988  0.073 .
 ## Residual 24 0.245691                
 ## ---
 ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</code></pre>
@@ -669,10 +669,10 @@ finalmodel.porites.PCs &lt;- ordistep(ord.porites.CAP, formula= ~ PC1 + PC2 + PC
 ## Start: distance ~ PC1 + PC2 + PC3 + PC4 
 ## 
 ##       Df     AIC      F Pr(&gt;F)  
-## - PC3  1 -33.214 0.4265  0.670  
+## - PC3  1 -33.214 0.4265  0.680  
 ## - PC4  1 -32.159 1.3310  0.250  
-## - PC2  1 -32.026 1.4472  0.235  
-## - PC1  1 -28.099 5.1373  0.020 *
+## - PC2  1 -32.026 1.4472  0.215  
+## - PC1  1 -28.099 5.1373  0.015 *
 ## ---
 ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 ## 
@@ -682,9 +682,9 @@ finalmodel.porites.PCs &lt;- ordistep(ord.porites.CAP, formula= ~ PC1 + PC2 + PC
 ## + PC3  1 -31.724 0.4265   0.69
 ## 
 ##       Df     AIC      F Pr(&gt;F)  
-## - PC4  1 -33.675 1.3626   0.29  
-## - PC2  1 -33.525 1.4994   0.21  
-## - PC1  1 -29.681 5.2553   0.03 *
+## - PC4  1 -33.675 1.3626  0.300  
+## - PC2  1 -33.525 1.4994  0.255  
+## - PC1  1 -29.681 5.2553  0.035 *
 ## ---
 ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 ## 
@@ -692,30 +692,30 @@ finalmodel.porites.PCs &lt;- ordistep(ord.porites.CAP, formula= ~ PC1 + PC2 + PC
 ## 
 ##       Df     AIC      F Pr(&gt;F)
 ## + PC4  1 -33.214 1.3626  0.255
-## + PC3  1 -32.159 0.4213  0.720
+## + PC3  1 -32.159 0.4213  0.670
 ## 
 ##       Df     AIC      F Pr(&gt;F)   
-## - PC2  1 -33.960 1.5835  0.225   
-## - PC1  1 -30.372 5.2162  0.010 **
+## - PC2  1 -33.960 1.5835  0.180   
+## - PC1  1 -30.372 5.2162  0.005 **
 ## ---
 ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 ## 
 ## Step: distance ~ PC1 
 ## 
 ##       Df     AIC      F Pr(&gt;F)
-## + PC2  1 -33.675 1.5835  0.220
-## + PC4  1 -33.525 1.4411  0.260
+## + PC2  1 -33.675 1.5835  0.215
+## + PC4  1 -33.525 1.4411  0.235
 ## + PC3  1 -32.431 0.4256  0.595
 ## 
 ##       Df     AIC     F Pr(&gt;F)  
-## - PC1  1 -31.026 5.008  0.015 *
+## - PC1  1 -31.026 5.008   0.02 *
 ## ---
 ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 ## 
 ##       Df     AIC      F Pr(&gt;F)
-## + PC2  1 -33.675 1.5835  0.205
-## + PC4  1 -33.525 1.4411  0.255
-## + PC3  1 -32.431 0.4256  0.630</code></pre>
+## + PC2  1 -33.675 1.5835  0.215
+## + PC4  1 -33.525 1.4411  0.240
+## + PC3  1 -32.431 0.4256  0.660</code></pre>
 <pre class="r"><code>finalmodel.porites.PCs</code></pre>
 <pre><code>## Call: capscale(formula = distance ~ PC1, data = data)
 ## 
@@ -751,7 +751,7 @@ anova.cca(finalmodel.porites.PCs)</code></pre>
 ## 
 ## Model: capscale(formula = distance ~ PC1, data = data)
 ##          Df SumOfSqs     F Pr(&gt;F)  
-## Model     1 0.051888 5.008  0.014 *
+## Model     1 0.051888 5.008  0.015 *
 ## Residual 27 0.279745               
 ## ---
 ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</code></pre>
@@ -764,7 +764,7 @@ anova.cca(finalmodel.porites.PCs, by=&quot;terms&quot;)</code></pre>
 ## 
 ## Model: capscale(formula = distance ~ PC1, data = data)
 ##          Df SumOfSqs     F Pr(&gt;F)  
-## PC1       1 0.051888 5.008  0.016 *
+## PC1       1 0.051888 5.008  0.012 *
 ## Residual 27 0.279745               
 ## ---
 ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</code></pre>
@@ -778,7 +778,7 @@ anova.cca(finalmodel.porites.PCs, by=&quot;axis&quot;)</code></pre>
 ## 
 ## Model: capscale(formula = distance ~ PC1, data = data)
 ##          Df SumOfSqs      F Pr(&gt;F)  
-## CAP1      1 0.052451 4.7122  0.016 *
+## CAP1      1 0.052451 4.7122  0.017 *
 ## Residual 27 0.300537                
 ## ---
 ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</code></pre>
@@ -800,7 +800,7 @@ plot_ordination(phy.f.t.porites, ord.porites.CAP2,  shape=&quot;Site&quot;,type=
 ## 
 ## Model: capscale(formula = distance ~ mean + var + dip + daily.mean.min + daily.mean.max + daysover30 + daysunder27, data = data)
 ##          Df SumOfSqs      F Pr(&gt;F)
-## Model     5 0.089754 1.7069  0.108
+## Model     5 0.089754 1.7069  0.101
 ## Residual 23 0.241879</code></pre>
 <pre class="r"><code># In a model with all 4 PCs included, this model (Porites, all temp metrics) is not significant at p=0.1
 
@@ -823,60 +823,60 @@ finalmodel.porites.alltempmetrics &lt;- ordistep(ord.porites.CAP2, formula= ~ me
 ## + var  0 -30.178         
 ## 
 ##                  Df     AIC      F Pr(&gt;F)
-## - dip             1 -31.861 0.2523  0.830
-## - daily.mean.max  1 -31.787 0.3120  0.755
-## - daily.mean.min  1 -31.751 0.3409  0.735
-## - mean            1 -31.733 0.3556  0.730
+## - daily.mean.max  1 -31.787 0.3120  0.805
+## - dip             1 -31.861 0.2523  0.785
+## - daily.mean.min  1 -31.751 0.3409  0.765
+## - mean            1 -31.733 0.3556  0.765
 ## - daysover30      0 -30.178              
 ## - daysunder27     0 -30.178              
 ## 
-## Step: distance ~ mean + daily.mean.min + daily.mean.max + daysover30 +      daysunder27 
+## Step: distance ~ mean + dip + daily.mean.min + daysover30 + daysunder27 
 ## 
-##       Df     AIC      F Pr(&gt;F)
-## + var  1 -30.178 0.2523   0.81
-## + dip  1 -30.178 0.2523   0.82
+##                  Df     AIC     F Pr(&gt;F)
+## + var             1 -30.178 0.312   0.72
+## + daily.mean.max  1 -30.178 0.312   0.76
 ## 
 ##                  Df     AIC      F Pr(&gt;F)
-## - daily.mean.max  1 -33.186 0.5652  0.605
-## - daily.mean.min  1 -33.107 0.6323  0.580
-## - mean            1 -32.978 0.7423  0.535
-## - daysover30      0 -31.861              
-## - daysunder27     0 -31.861              
+## - dip             1 -33.186 0.5023  0.630
+## - daily.mean.min  1 -32.968 0.6873  0.385
+## - mean            1 -32.141 1.4016  0.165
+## - daysover30      0 -31.787              
+## - daysunder27     0 -31.787              
 ## 
 ## Step: distance ~ mean + daily.mean.min + daysover30 + daysunder27 
 ## 
 ##                  Df     AIC      F Pr(&gt;F)
-## + daily.mean.max  1 -31.861 0.5652  0.580
-## + dip             1 -31.787 0.5023  0.615
-## + var             1 -31.575 0.3235  0.745
+## + daily.mean.max  1 -31.861 0.5652  0.545
+## + dip             1 -31.787 0.5023  0.550
+## + var             1 -31.575 0.3235  0.750
 ## 
 ##                  Df     AIC      F Pr(&gt;F)
-## - daily.mean.min  1 -34.421 0.6683  0.415
-## - mean            1 -33.683 1.3306  0.220
+## - daily.mean.min  1 -34.421 0.6683   0.53
+## - mean            1 -33.683 1.3306   0.30
 ## - daysover30      0 -33.186              
 ## - daysunder27     0 -33.186              
 ## 
 ## Step: distance ~ mean + daysover30 + daysunder27 
 ## 
 ##                  Df     AIC      F Pr(&gt;F)
-## + daily.mean.min  1 -33.186 0.6683  0.465
-## + var             1 -33.135 0.6232  0.510
-## + daily.mean.max  1 -33.107 0.5983  0.525
-## + dip             1 -32.968 0.4759  0.700
+## + daily.mean.min  1 -33.186 0.6683  0.515
+## + var             1 -33.135 0.6232  0.540
+## + daily.mean.max  1 -33.107 0.5983  0.560
+## + dip             1 -32.968 0.4759  0.615
 ## 
 ##               Df     AIC      F Pr(&gt;F)
-## - mean         1 -34.461 1.8185   0.17
+## - mean         1 -34.461 1.8185   0.14
 ## - daysover30   0 -34.421              
 ## - daysunder27  0 -34.421              
 ## 
 ## Step: distance ~ daysover30 + daysunder27 
 ## 
 ##                  Df     AIC      F Pr(&gt;F)
-## + mean            1 -34.421 1.8185  0.185
-## + daily.mean.max  1 -34.245 1.6502  0.185
-## + daily.mean.min  1 -33.683 1.1186  0.295
-## + var             1 -33.490 0.9388  0.405
-## + dip             1 -32.913 0.4080  0.705
+## + mean            1 -34.421 1.8185  0.155
+## + daily.mean.max  1 -34.245 1.6502  0.175
+## + daily.mean.min  1 -33.683 1.1186  0.260
+## + var             1 -33.490 0.9388  0.455
+## + dip             1 -32.913 0.4080  0.690
 ## 
 ##               Df     AIC F Pr(&gt;F)
 ## - daysover30   0 -34.461         
@@ -885,24 +885,24 @@ finalmodel.porites.alltempmetrics &lt;- ordistep(ord.porites.CAP2, formula= ~ me
 ## Step: distance ~ daysunder27 
 ## 
 ##                  Df     AIC      F Pr(&gt;F)
-## + mean            1 -34.421 1.8185  0.115
-## + daily.mean.max  1 -34.245 1.6502  0.180
-## + daily.mean.min  1 -33.683 1.1186  0.340
-## + var             1 -33.490 0.9388  0.375
-## + dip             1 -32.913 0.4080  0.685
+## + mean            1 -34.421 1.8185  0.140
+## + daily.mean.max  1 -34.245 1.6502  0.165
+## + daily.mean.min  1 -33.683 1.1186  0.305
+## + var             1 -33.490 0.9388  0.410
+## + dip             1 -32.913 0.4080  0.720
 ## + daysover30      0 -34.461              
 ## 
-##               Df     AIC      F Pr(&gt;F)   
-## - daysunder27  1 -31.026 5.5656  0.005 **
+##               Df     AIC      F Pr(&gt;F)  
+## - daysunder27  1 -31.026 5.5656  0.025 *
 ## ---
 ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 ## 
 ##                  Df     AIC      F Pr(&gt;F)
-## + mean            1 -34.421 1.8185  0.200
-## + daily.mean.max  1 -34.245 1.6502  0.215
-## + daily.mean.min  1 -33.683 1.1186  0.325
-## + var             1 -33.490 0.9388  0.395
-## + dip             1 -32.913 0.4080  0.705
+## + mean            1 -34.421 1.8185  0.155
+## + daily.mean.max  1 -34.245 1.6502  0.225
+## + daily.mean.min  1 -33.683 1.1186  0.240
+## + var             1 -33.490 0.9388  0.355
+## + dip             1 -32.913 0.4080  0.655
 ## + daysover30      0 -34.461</code></pre>
 <pre class="r"><code>finalmodel.porites.alltempmetrics</code></pre>
 <pre><code>## Call: capscale(formula = distance ~ daysunder27, data = data)
@@ -938,7 +938,7 @@ anova.cca(finalmodel.porites.alltempmetrics)</code></pre>
 ## 
 ## Model: capscale(formula = distance ~ daysunder27, data = data)
 ##          Df SumOfSqs      F Pr(&gt;F)  
-## Model     1 0.056678 5.5656  0.013 *
+## Model     1 0.056678 5.5656  0.017 *
 ## Residual 27 0.274955                
 ## ---
 ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</code></pre>
@@ -950,9 +950,9 @@ anova.cca(finalmodel.porites.alltempmetrics, by=&quot;terms&quot;)</code></pre>
 ## Number of permutations: 999
 ## 
 ## Model: capscale(formula = distance ~ daysunder27, data = data)
-##             Df SumOfSqs      F Pr(&gt;F)  
-## daysunder27  1 0.056678 5.5656  0.017 *
-## Residual    27 0.274955                
+##             Df SumOfSqs      F Pr(&gt;F)   
+## daysunder27  1 0.056678 5.5656  0.008 **
+## Residual    27 0.274955                 
 ## ---
 ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</code></pre>
 <pre class="r"><code># Testing the significance of axes (at least the first two or three should present a significant p value):
@@ -964,9 +964,9 @@ anova.cca(finalmodel.porites.alltempmetrics, by=&quot;axis&quot;)</code></pre>
 ## Number of permutations: 999
 ## 
 ## Model: capscale(formula = distance ~ daysunder27, data = data)
-##          Df SumOfSqs     F Pr(&gt;F)  
-## CAP1      1 0.057087 5.209  0.016 *
-## Residual 27 0.295901               
+##          Df SumOfSqs     F Pr(&gt;F)   
+## CAP1      1 0.057087 5.209  0.008 **
+## Residual 27 0.295901                
 ## ---
 ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</code></pre>
 <pre class="r"><code># Excellent, all of these test are significant. This means that the final model (Porites), distance ~ daysunder27 can be used.
@@ -990,7 +990,7 @@ plot_ordination(phy.f.t.acropora, ord.acropora.CAP,  shape=&quot;Site&quot;,type
 ## 
 ## Model: capscale(formula = distance ~ PC1 + PC2 + PC3 + PC4, data = data)
 ##          Df SumOfSqs     F Pr(&gt;F)  
-## Model     4   1.6210 2.751  0.024 *
+## Model     4   1.6210 2.751  0.018 *
 ## Residual 21   3.0936               
 ## ---
 ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</code></pre>
@@ -1002,82 +1002,65 @@ finalmodel.acropora.PCs&lt;-ordistep(ord.acropora.CAP, formula= ~ PC1 + PC2 + PC
 ## Start: distance ~ PC1 + PC2 + PC3 + PC4 
 ## 
 ##       Df    AIC      F Pr(&gt;F)  
-## - PC1  1 38.397 1.7268  0.210  
-## - PC3  1 38.775 2.0594  0.135  
-## - PC2  1 39.919 3.0970  0.070 .
-## - PC4  1 40.789 3.9171  0.020 *
+## - PC3  1 38.775 2.0594  0.175  
+## - PC1  1 38.397 1.7268  0.170  
+## - PC2  1 39.919 3.0970  0.065 .
+## - PC4  1 40.789 3.9171  0.050 *
 ## ---
 ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 ## 
-## Step: distance ~ PC2 + PC3 + PC4 
+## Step: distance ~ PC1 + PC2 + PC4 
 ## 
 ##       Df    AIC      F Pr(&gt;F)
-## + PC1  1 38.343 1.7268   0.18
+## + PC3  1 38.343 2.0594  0.105
 ## 
 ##       Df    AIC      F Pr(&gt;F)  
-## - PC3  1 38.502 1.8554  0.155  
-## - PC2  1 39.775 3.0520  0.060 .
-## - PC4  1 40.927 4.1874  0.045 *
+## - PC1  1 38.502 1.5113  0.190  
+## - PC2  1 40.280 3.1751  0.055 .
+## - PC4  1 40.590 3.4769  0.050 *
 ## ---
 ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 ## 
 ## Step: distance ~ PC2 + PC4 
 ## 
 ##       Df    AIC      F Pr(&gt;F)
-## + PC3  1 38.397 1.8554  0.150
-## + PC1  1 38.775 1.5113  0.235
+## + PC3  1 38.397 1.8554  0.170
+## + PC1  1 38.775 1.5113  0.225
 ## 
 ##       Df    AIC      F Pr(&gt;F)  
-## - PC2  1 39.838 3.1489   0.11  
-## - PC4  1 40.443 3.7644   0.03 *
+## - PC2  1 39.838 3.1489  0.060 .
+## - PC4  1 40.443 3.7644  0.055 .
 ## ---
 ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 ## 
-## Step: distance ~ PC4 
-## 
-##       Df    AIC      F Pr(&gt;F)  
-## + PC2  1 38.502 3.1489  0.065 .
-## + PC3  1 39.775 1.8999  0.175  
-## + PC1  1 40.280 1.4208  0.295  
-## ---
-## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
-## 
-##       Df    AIC      F Pr(&gt;F)  
-## - PC4  1 41.297 3.4149  0.045 *
-## ---
-## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
-## 
-##       Df    AIC      F Pr(&gt;F)  
-## + PC2  1 38.502 3.1489  0.075 .
-## + PC3  1 39.775 1.8999  0.180  
-## + PC1  1 40.280 1.4208  0.265  
-## ---
-## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</code></pre>
+##       Df    AIC      F Pr(&gt;F)
+## + PC3  1 38.397 1.8554  0.155
+## + PC1  1 38.775 1.5113  0.270</code></pre>
 <pre class="r"><code>finalmodel.acropora.PCs</code></pre>
-<pre><code>## Call: capscale(formula = distance ~ PC4, data = data)
+<pre><code>## Call: capscale(formula = distance ~ PC2 + PC4, data = data)
 ## 
 ##               Inertia Proportion Eigenvals Rank
 ## Total          4.7146     1.0000    4.9334     
-## Constrained    0.5873     0.1246    0.6003    1
-## Unconstrained  4.1273     0.8754    4.3331   16
+## Constrained    1.0843     0.2300    1.1049    2
+## Unconstrained  3.6303     0.7700    3.8285   16
 ## Imaginary                          -0.2188    9
 ## Inertia is squared Unknown distance 
 ## 
 ## Eigenvalues for constrained axes:
-##   CAP1 
-## 0.6003 
+##   CAP1   CAP2 
+## 0.9781 0.1268 
 ## 
 ## Eigenvalues for unconstrained axes:
 ##   MDS1   MDS2   MDS3   MDS4   MDS5   MDS6   MDS7   MDS8   MDS9  MDS10 
-## 3.0271 0.9035 0.1479 0.0872 0.0529 0.0315 0.0285 0.0161 0.0116 0.0084 
+## 2.7911 0.6480 0.1398 0.0872 0.0528 0.0313 0.0283 0.0148 0.0102 0.0084 
 ##  MDS11  MDS12  MDS13  MDS14  MDS15  MDS16 
-## 0.0072 0.0046 0.0037 0.0017 0.0009 0.0003</code></pre>
+## 0.0070 0.0046 0.0024 0.0015 0.0009 0.0002</code></pre>
 <pre class="r"><code># With stepwise model selection, PC2 and PC4 are retained in the final model for Acropora (PCs 1-4)
 
 # Now, we test to make sure that this model holds up
 vif.cca(finalmodel.acropora.PCs)</code></pre>
-<pre><code>## PC4 
-##   1</code></pre>
+<pre><code>##      PC2      PC4 
+## 1.000065 1.000065</code></pre>
 <pre class="r"><code># These are &lt;10, so are not collinear. This makes sense, as we are using PCs, and they, by nature, should not be collinear...
 
 # Now, we need to test whether our whole model, terms, and axes are significant (explain more variance of our observations than by chance)
@@ -1087,10 +1070,10 @@ anova.cca(finalmodel.acropora.PCs)</code></pre>
 ## Permutation: free
 ## Number of permutations: 999
 ## 
-## Model: capscale(formula = distance ~ PC4, data = data)
+## Model: capscale(formula = distance ~ PC2 + PC4, data = data)
 ##          Df SumOfSqs      F Pr(&gt;F)  
-## Model     1   0.5873 3.4149  0.065 .
-## Residual 24   4.1273                
+## Model     2   1.0843 3.4348  0.022 *
+## Residual 23   3.6303                
 ## ---
 ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</code></pre>
 <pre class="r"><code># Testing the significance of terms (environmental variables):
@@ -1100,10 +1083,11 @@ anova.cca(finalmodel.acropora.PCs, by=&quot;terms&quot;)</code></pre>
 ## Permutation: free
 ## Number of permutations: 999
 ## 
-## Model: capscale(formula = distance ~ PC4, data = data)
+## Model: capscale(formula = distance ~ PC2 + PC4, data = data)
 ##          Df SumOfSqs      F Pr(&gt;F)  
-## PC4       1   0.5873 3.4149  0.042 *
-## Residual 24   4.1273                
+## PC2       1   0.4901 3.1051  0.057 .
+## PC4       1   0.5942 3.7644  0.036 *
+## Residual 23   3.6303                
 ## ---
 ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</code></pre>
 <pre class="r"><code># Testing the significance of axes (at least the first two or three should present a significant p value):
@@ -1126,7 +1110,7 @@ plot_ordination(phy.f.t.acropora, ord.acropora.CAP2,  shape=&quot;Site&quot;,typ
 ## 
 ## Model: capscale(formula = distance ~ mean + var + dip + daily.mean.min + daily.mean.max + daysover30 + daysunder27, data = data)
 ##          Df SumOfSqs      F Pr(&gt;F)  
-## Model     5   1.9344 2.7831  0.033 *
+## Model     5   1.9344 2.7831  0.024 *
 ## Residual 20   2.7802                
 ## ---
 ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</code></pre>
@@ -1150,24 +1134,26 @@ finalmodel.acropora.alltempmetrics&lt;-ordistep(ord.acropora.CAP2, formula= ~ me
 ##                  Df    AIC F Pr(&gt;F)
 ## + daily.mean.min  0 37.566         
 ## 
-##                  Df    AIC      F Pr(&gt;F)
-## - var             1 38.133 2.0759  0.135
-## - mean            1 38.254 2.1786  0.130
-## - daily.mean.max  1 38.692 2.5556  0.120
-## - dip             1 38.702 2.5643  0.110
-## - daysover30      0 37.566              
-## - daysunder27     0 37.566              
+##                  Df    AIC      F Pr(&gt;F)  
+## - var             1 38.133 2.0759  0.155  
+## - mean            1 38.254 2.1786  0.140  
+## - daily.mean.max  1 38.692 2.5556  0.115  
+## - dip             1 38.702 2.5643  0.080 .
+## - daysover30      0 37.566                
+## - daysunder27     0 37.566                
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 ## 
 ## Step: distance ~ mean + dip + daily.mean.max + daysover30 + daysunder27 
 ## 
 ##                  Df    AIC      F Pr(&gt;F)
-## + var             1 37.566 2.0759  0.115
-## + daily.mean.min  1 37.566 2.0759  0.120
+## + var             1 37.566 2.0759  0.135
+## + daily.mean.min  1 37.566 2.0759  0.155
 ## 
 ##                  Df    AIC      F Pr(&gt;F)  
-## - dip             1 36.890 0.6202  0.515  
-## - mean            1 37.494 1.1287  0.310  
-## - daily.mean.max  1 41.979 5.2944  0.020 *
+## - dip             1 36.890 0.6202  0.505  
+## - mean            1 37.494 1.1287  0.345  
+## - daily.mean.max  1 41.979 5.2944  0.025 *
 ## - daysover30      0 38.133                
 ## - daysunder27     0 38.133                
 ## ---
@@ -1176,12 +1162,12 @@ finalmodel.acropora.alltempmetrics&lt;-ordistep(ord.acropora.CAP2, formula= ~ me
 ## Step: distance ~ mean + daily.mean.max + daysover30 + daysunder27 
 ## 
 ##                  Df    AIC      F Pr(&gt;F)
-## + daily.mean.min  1 36.562 1.9674  0.120
-## + dip             1 38.133 0.6202  0.535
-## + var             1 38.702 0.1523  0.875
+## + daily.mean.min  1 36.562 1.9674  0.150
+## + dip             1 38.133 0.6202  0.565
+## + var             1 38.702 0.1523  0.910
 ## 
 ##                  Df    AIC      F Pr(&gt;F)  
-## - mean            1 36.023 0.9797  0.340  
+## - mean            1 36.023 0.9797  0.355  
 ## - daily.mean.max  1 40.118 4.8996  0.025 *
 ## - daysover30      0 36.890                
 ## - daysunder27     0 36.890                
@@ -1191,23 +1177,23 @@ finalmodel.acropora.alltempmetrics&lt;-ordistep(ord.acropora.CAP2, formula= ~ me
 ## Step: distance ~ daily.mean.max + daysover30 + daysunder27 
 ## 
 ##                  Df    AIC      F Pr(&gt;F)
-## + daily.mean.min  1 36.675 1.1704  0.275
-## + var             1 36.907 0.9645  0.365
-## + mean            1 36.890 0.9797  0.415
-## + dip             1 37.494 0.4518  0.630
+## + daily.mean.min  1 36.675 1.1704  0.245
+## + mean            1 36.890 0.9797  0.305
+## + var             1 36.907 0.9645  0.395
+## + dip             1 37.494 0.4518  0.580
 ## 
 ##                  Df    AIC      F Pr(&gt;F)  
-## - daily.mean.max  1 40.584 6.6025  0.025 *
+## - daily.mean.max  1 40.584 6.6025  0.015 *
 ## - daysover30      0 36.023                
 ## - daysunder27     0 36.023                
 ## ---
 ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 ## 
 ##                  Df    AIC      F Pr(&gt;F)
-## + daily.mean.min  1 36.675 1.1704  0.285
-## + var             1 36.907 0.9645  0.375
-## + mean            1 36.890 0.9797  0.430
-## + dip             1 37.494 0.4518  0.625</code></pre>
+## + daily.mean.min  1 36.675 1.1704  0.290
+## + mean            1 36.890 0.9797  0.300
+## + var             1 36.907 0.9645  0.360
+## + dip             1 37.494 0.4518  0.565</code></pre>
 <pre class="r"><code>finalmodel.acropora.alltempmetrics</code></pre>
 <pre><code>## Call: capscale(formula = distance ~ daily.mean.max + daysover30 +
 ## daysunder27, data = data)
