@@ -1,21 +1,9 @@
-#working from Moorea_Sym
-
-# In Make file after filtering add these
-write.table(data.frame(tax_table(phy.f)), "tax_table.txt", row.names=T, quote=F)
-
-#Bioinf/clust/all_rep_set_rep_set.fasta = seqs
-#RAnalysis/Data/tax.table.txt = ISDs
-#column 9 is clade ID
-#awk '{print $1}' RAnalysis/Data/tax.table.txt = denovo name
-#awk '{print $8}' RAnalysis/Data/tax.table.txt = clade name
+#!/bin/bash
 
 #subset ID lists by clade
 awk '$9 ~ /^A/{ print $1; }' RAnalysis/Data/tax.table.txt > RAnalysis/Data/A_tree_seq.ids
 awk '$9 ~ /^C/{ print $1; }' RAnalysis/Data/tax.table.txt > RAnalysis/Data/C_tree_seq.ids
 awk '$9 ~ /^D/{ print $1; }' RAnalysis/Data/tax.table.txt > RAnalysis/Data/D_tree_seq.ids
-
-#Run MACQIIME
-source /macqiime/configs/bash_profile.txt
 
 #filter seqs by id list
 filter_fasta.py -f Bioinf/clust/all_rep_set_rep_set.fasta -s RAnalysis/Data/A_tree_seq.ids -o RAnalysis/Data/A_tree_seqs.fasta

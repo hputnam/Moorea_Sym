@@ -1,5 +1,14 @@
 all: RAnalysis/Data/Moorea_97glo_sym.RData RAnalysis/Data/Moorea_sym.RData RAnalysis/Data/Moorea_sym100.RData
 
+RAnalysis/data_analysis.html: RAnalysis/data_analysis.Rmd
+	R -e 'if(Sys.info()[["sysname"]]=="Darwin") { Sys.setenv(RSTUDIO_PANDOC="/Applications/RStudio.app/Contents/MacOS/pandoc") } else { Sys.setenv(RSTUDIO_PANDOC="/usr/lib/rstudio/bin/pandoc") }; rmarkdown::render("RAnalysis/data_analysis.Rmd")'
+
+RAnalysis/Data/A_tree_seqs_aligned_clean.fasta: RAnalysis/Scripts/build.phy.tree.txt
+	bash RAnalysis/Scripts/build.phy.tree.txt
+	
+RAnalysis/Data/tax.table.txt:
+	R -e 'load("RAnalysis/Data/Moorea_sym_f.RData"); write.table(data.frame(phyloseq::tax_table(phy.f)), "RAnalysis/Data/tax.table.txt", row.names=T, quote=F)'
+
 RAnalysis/Data/tempdata.RData: RAnalysis/Scripts/temperature_analysis.R
 	R --vanilla < RAnalysis/Scripts/temperature_analysis.R
 

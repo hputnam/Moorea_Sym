@@ -17,8 +17,6 @@ library(fmsb)
 library(vegan)
 library(lme4)
 library(MuMIn)
-library(png)
-library(pixmap)
 
 # Set options
 options(stringsAsFactors = FALSE)
@@ -34,7 +32,7 @@ taxcolors <- matrix(c("#d9d9d9", "#ffffb3", "#fb8072"),
 ## Temperature data summary
 ```{r temp_data}
 # Load temperature data
-load("tempdata.RData") # loads the temperature data from temperature_analysis
+load("Data/tempdata.RData") # loads the temperature data from temperature_analysis
 
 # Plot temperature distributions for each site
 par(mfrow=c(2,3), mar=c(3,3,2,2), mgp=c(1.5,0.1,0), tcl=-0.2)
@@ -84,7 +82,7 @@ biplot(pca.temp)
 ```
 
 ### Temperature regime radar chart
-```{r}
+```{r radarchart}
 # Calculate ranges of each column
 temp2 <- rbind(apply(temp, 2, function(x) rev(range(x))), temp)
 # Reorder columns
@@ -112,7 +110,7 @@ legend("topright", rownames(temp2)[-(1:2)], lty=1, lwd=2, col=sitecolors, bty="n
 ```
 
 # Figure 1
-```{r Fig1}
+```{r Fig1, eval=T}
 png("Output/Fig1.png", width=7, height=2.5, units="in", res=300)
 par(mfrow=c(1,3), mgp=c(1,0.1,0), tcl=0.25, cex.lab=1, cex.axis=0.8,
     mar=c(2,2,2,2))
@@ -121,7 +119,7 @@ par(mfrow=c(1,3), mgp=c(1,0.1,0), tcl=0.25, cex.lab=1, cex.axis=0.8,
 
 # Panel A
 #### MAP OF MOOREA SHOWING SITE LOCATIONS
-plot(NA)
+plot(1)
 
 # Panel B
 biplot(pca.temp, cex=0.8, bty="n", xpd=NA)
@@ -261,15 +259,12 @@ dev.off()
 #returns sqrt of pairwise genetic distance, then squared the matrices
 A.seqs <- read.alignment(file = "Data/A_tree_seqs_aligned_clean.fasta", format= "fasta")
 A.dis <- (as.matrix(dist.alignment(A.seqs, matrix = "identity" )))^2
-write.csv(A.dis, file="Data/A.dis.matx.csv")
 
 C.seqs <- read.alignment(file = "Data/C_tree_seqs_aligned_clean.fasta", format= "fasta")
 C.dis <- (as.matrix(dist.alignment(C.seqs, matrix = "identity" )))^2
-write.csv(C.dis, file="Data/C.dis.matx.csv")
 
 D.seqs <- read.alignment(file = "Data/D_tree_seqs_aligned_clean.fasta", format= "fasta")
 D.dis <- (as.matrix(dist.alignment(D.seqs, matrix = "identity" )))^2
-write.csv(D.dis, file="D.dis.matx.csv")
 
 #give clade distances using average 28s distance from Pochon and Gates 2010
 A_C <- matrix(0.1960, ncol=ncol(A.dis), nrow=nrow(C.dis), dimnames=list(rownames(C.dis), colnames(A.dis))) 
@@ -511,7 +506,7 @@ mod.test
 plot.bd.temp <- function(metric) {
   acrdat <- data.frame(sample_data(phy.f.t.acropora))[, metric]
   pordat <- data.frame(sample_data(phy.f.t.porites))[, metric]
-  plot(NA, xlim=range(acrdat), ylim=range(acr.bd$distances),
+  plot(NA, xlim=range(acrdat), ylim=c(0,0.125),
        xlab=paste(metric, "(by Site)"), ylab="Distance to centroid")
   acr.mod <- lm(acr.bd$distances ~ acrdat)
   acr.pval <- round(anova(acr.mod)$`Pr(>F)`[1], 3)
