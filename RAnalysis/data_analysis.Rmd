@@ -17,13 +17,15 @@ library(fmsb)
 library(vegan)
 library(lme4)
 library(MuMIn)
+library(png)
+library(pixmap)
 
 # Set options
 options(stringsAsFactors = FALSE)
 
 # Set colors for plotting
 sitecolors <- c("#762a83", "#9970ab", "#c2a5cf", "#a6dba0", "#5aae61", "#1b7837")
-taxcolors <- matrix(c("#dce84a", "#337be8", "#e83333"), 
+taxcolors <- matrix(c("#d9d9d9", "#ffffb3", "#fb8072"), 
                     dimnames=list(c("CladeA", "CladeC", "CladeD")))
 ```
 
@@ -37,17 +39,17 @@ load("tempdata.RData") # loads the temperature data from temperature_analysis
 # Plot temperature distributions for each site
 par(mfrow=c(2,3), mar=c(3,3,2,2), mgp=c(1.5,0.1,0), tcl=-0.2)
 hist(temp.all$Site.1, xlim=c(25,32), breaks=seq(25,32,0.25), 
-     main="Site 1", xlab="Temp °C")
+     main="Site 1", xlab="Temp ?C")
 hist(temp.all$Site.2, xlim=c(25,32), breaks=seq(25,32,0.25), 
-     main="Site 2", xlab="Temp °C")
+     main="Site 2", xlab="Temp ?C")
 hist(temp.all$Site.3, xlim=c(25,32), breaks=seq(25,32,0.25), 
-     main="Site 3", xlab="Temp °C")
+     main="Site 3", xlab="Temp ?C")
 hist(temp.all$Site.7, xlim=c(25,32), breaks=seq(25,32,0.25), 
-     main="Site 7", xlab="Temp °C")
+     main="Site 7", xlab="Temp ?C")
 hist(temp.all$Site.8, xlim=c(25,32), breaks=seq(25,32,0.25), 
-     main="Site 8", xlab="Temp °C")
+     main="Site 8", xlab="Temp ?C")
 hist(temp.all$Site.9, xlim=c(25,32), breaks=seq(25,32,0.25), 
-     main="Site 9", xlab="Temp °C")
+     main="Site 9", xlab="Temp ?C")
 
 # View Descriptive Stats
 temp.summ
@@ -88,7 +90,7 @@ temp2 <- rbind(apply(temp, 2, function(x) rev(range(x))), temp)
 # Reorder columns
 temp2 <- temp2[, c(3,4,1,6,2,5,7)]
 # Plot radar chart
-radarchart(
+rad <- radarchart(
   temp2,
   
   #custom polygon
@@ -105,8 +107,48 @@ radarchart(
   vlcex=0.8 
 )
 
-legend("topright", rownames(temp2)[-(1:2)], lty=1, lwd=4, col=sitecolors, bty="n")
+legend("topright", rownames(temp2)[-(1:2)], lty=1, lwd=2, col=sitecolors, bty="n")
 
+```
+
+# Figure 1
+```{r Fig1}
+png("Output/Fig1.png", width=7, height=2.5, units="in", res=300)
+par(mfrow=c(1,3), mgp=c(1,0.1,0), tcl=0.25, cex.lab=1, cex.axis=0.8,
+    mar=c(2,2,2,2))
+
+
+
+# Panel A
+#### MAP OF MOOREA SHOWING SITE LOCATIONS
+plot(NA)
+
+# Panel B
+biplot(pca.temp, cex=0.8, bty="n", xpd=NA)
+title("B.", adj=0)
+
+# Panel C
+par(mar=c(0,0,0,0), xpd=NA)
+rad <- radarchart(
+  temp2,
+  
+  #custom polygon
+  plwd=2, plty=1,
+  
+  #custom colors
+  pcol=sitecolors,
+  pfcol=scales::alpha(sitecolors, 0.25),
+ 
+  #custom the grid
+  cglcol="grey", cglty=1, axislabcol="grey", cglwd=0.8,
+ 
+  #custom labels
+  vlcex=0.8 
+)
+title("C.", adj=0)
+legend("topright", rownames(temp2)[-(1:2)], lty=1, lwd=2, col=sitecolors, bty="n", 
+       cex=0.6, ncol=2, inset=c(0.02,0.06))
+dev.off()
 ```
 
 
@@ -150,7 +192,7 @@ phy100.f.t <- transform_sample_counts(phy100.f, transform)  # Transform data
 
 ## Visualize *Symbiodinium* clade abundances
 The relative abundance of each clade in the entire dataset (normalized for differences in sequencing depth across samples).
-```{r clades}
+```{r Fig2}
 cladeAbund <- aggregate(data.frame(RelAbund=rowSums(otu_table(phy.f.p))),
                         by=list(Clade=data.frame(tax_table(phy.f.p))$Clade), FUN=sum)
 cladeAbund$Prop <- prop.table(cladeAbund$RelAbund)
@@ -169,17 +211,19 @@ composition <- function(phy, col, legend=T) {
   spbreaks <- c(which(duplicated(samdat$Species)==F) - 1, nrow(samdat))
   
   # Make Barplot
+  par(mar=c(4,2,2,8))
   barplot(typerelabund, horiz=T, space=0, axes=F,axisnames=F, yaxs="i", col=col)
   rect(0, 0, par("usr")[2], par("usr")[4], lwd=1, xpd=T)
-  axis(side=1, at=seq(0, 1, 0.1), line=0, tck=-0.025, mgp=c(0,0.25,0), cex.axis=0.7)
-  mtext(side=1, "Relative abundance", cex=0.7, line=1)
+  axis(side=1, at=seq(0, 1, 0.2), line=0, tck=-0.02, mgp=c(0,0.25,0), cex.axis=0.8)
+  mtext(side=1, "Relative abundance", cex=1, line=2)
   # Add legend
   if (legend==T) {
-    legend(x=par("usr")[2]/2, y=par("usr")[4], xjust=0.5, yjust=0.25, horiz=T, bty="n", xpd=T, 
-           cex=0.7, legend=c("A", "C", "D"), fill=taxcolors, x.intersp=0.5)
-    legend(x=par("usr")[2]*1.1, y=par("usr")[4]*0.75, xjust=0, yjust=0.1, bty="n", xpd=T, cex=1, 
-           pt.cex=1, legend=c("Site 1", "Site 2", "Site 3", "Site 7", "Site 8", "Site 9"), fill=sitecolors, y.intersp=0.7, 
-           x.intersp=0.3)
+    legend(x=1.1, y=par("usr")[4]*0.90, xjust=0, yjust=0.1, bty="n", xpd=T, 
+           cex=1, pt.cex=1, legend=c("Clade A", "Clade C", "Clade D"), 
+           fill=taxcolors, y.intersp=0.7)
+    legend(x=1.1, y=par("usr")[4]*0.725, xjust=0, yjust=0.1, bty="n", xpd=T, cex=1, 
+           pt.cex=1, legend=c("Site 1", "Site 2", "Site 3", "Site 7", "Site 8", "Site 9"),
+           fill=sitecolors, y.intersp=0.7)
   }
   # Add grouping bars for Site
   sitecolors <- matrix(sitecolors, 
@@ -187,26 +231,28 @@ composition <- function(phy, col, legend=T) {
                               " Site 7", " Site 8", " Site 9")))
   for (i in 1:(length(sitebreaks)-1)) {
     lines(c(0, 1), c(sitebreaks[i], sitebreaks[i]), lty=2, lwd=0.25)
-    rect(1.01, sitebreaks[i], 1.04, sitebreaks[i+1],
+    rect(1.01, sitebreaks[i], 1.05, sitebreaks[i+1],
          col=sitecolors[as.character(samdat$Site[sitebreaks[i]+1]),], 
          lwd=0.25, xpd=T)
   }
   
   # Add lines to separate species and species names
   for (i in 1:length(spbreaks)) {
-    lines(c(0, 1.07), c(spbreaks[i], spbreaks[i]), xpd=T, type="l", lwd=0.4)
-    text(1.03, (spbreaks[i] + spbreaks[i+1]) / 2, xpd=T, pos=4, cex=0.8,
-         labels=paste(samdat$Genus[which(duplicated(samdat$Species)==F)][i], "\n",
-                      samdat$Species[which(duplicated(samdat$Species)==F)][i], sep=""))
+    lines(c(-0.08, 1), c(spbreaks[i], spbreaks[i]), xpd=T, type="l", lwd=0.6)
   }
-  for (i in 1:nrow(samdat)) {
-    text(0, i-0.5, rownames(samdat)[i], xpd=T, cex=0.7, pos=2)
-  }
+  text(-0.07, c(11,37), xpd=T, pos=4, cex=1.5, srt=90,
+         labels=c(expression(italic("Porites")), 
+                  expression(italic("Acropora"))))
+  #for (i in 1:nrow(samdat)) {
+  #  text(0, i-0.5, rownames(samdat)[i], xpd=T, cex=0.7, pos=2)
+  #}
 }
 
+png("Output/Fig2.png", width=3.5, height=5, units="in", res=300)
 par(mfrow=c(1,1), mar=c(2, 1.5, 2, 10), lwd=0.1, cex=0.7, xpd=NA)
 # Plot composition of 97% within-sample OTUs colored by clade
 composition(phy.f.p, col=taxcolors[factor(data.frame(tax_table(phy.f.p))[order(data.frame(tax_table(phy.f.p))$Subtype), ]$Clade, levels=c("A","C","D"))], legend=T)
+dev.off()
 ```
 
 ## Build *Symbiodinium* phylogenetic tree
@@ -248,6 +294,7 @@ phy_tree(phy.f.t) <- phy_tree(uber.tree)
 
 ## Ordinate *Symbiodinium* communities
 ```{r sym_ordination}
+par(lwd=1, cex=1)
 # Separate Acropora and Porites
 phy.f.t.porites <- subset_samples(phy.f.t,Species=="Porties")
 phy.f.t.acropora <- subset_samples(phy.f.t,Species=="Acropora")
@@ -369,6 +416,60 @@ with(por.bdsumm, {
 })
 ```
 
+# Figure 3
+```{r Fig3}
+png("Output/Fig3.png", width=4, height=4, units="in", res=300)
+par(mfrow=c(2,2), mar=c(2,2,1,1), mgp=c(1.1,0.1,0), tcl=0.2, 
+    cex.axis=0.8, cex.lab=1)
+
+# Panel A
+plot(acr.bd, hull=F, label=F, col=sitecolors, seg.col=sitecolors,
+     xlab="Axis 1", ylab="Axis 2", main="", cex=1)
+ordihull(acr.bd, sample_data(phy.f.t.acropora)$Site,  draw = c("polygon"),
+         col = sitecolors, alpha=0.2, lwd=0.05)
+legend("topright", bty="n", pch=1:6, cex=0.6,
+       legend=levels(sample_data(phy.f.t.acropora)$Site),
+       col=sitecolors)
+#text(par("usr")[1], par("usr")[4], "A.", font=2, xpd=NA, pos=2, cex=1.25)
+mtext(side=3, adj=-0.23, "A.", font=2)
+
+# Panel B
+with(acr.bdsumm, {
+  plot(mean, type="n", ylim=c(0, 0.15), ylab="Distance to centroid", xaxt="n", 
+       xlab="Site")
+  arrows(1:6, mean - se, 1:6, mean + se, length=0.025, angle=90, code=3, lwd=0.5)
+  points(1:6, mean, cex=1, pch=1:6, col=sitecolors, lwd=2)
+  axis(side=1, at=1:6, cex.axis=0.75, labels=group)
+  text(1:6, mean+se+0.01, l, cex=0.5)
+})
+#text(par("usr")[1]-0.3, par("usr")[4], "B.", font=2, xpd=NA, pos=2, cex=1.25)
+mtext(side=3, adj=-0.25, "B.", font=2)
+
+# Panel C
+plot(por.bd, hull=F, label=F, col=sitecolors, seg.col=sitecolors,
+     xlab="Axis 1", ylab="Axis 2", main="", cex=1)
+ordihull(por.bd, sample_data(phy.f.t.porites)$Site,  draw = c("polygon"),
+         col = sitecolors, alpha=0.2, lwd=0.05)
+legend("topright", bty="n", pch=1:6, cex=0.6,
+       legend=levels(sample_data(phy.f.t.porites)$Site),
+       col=sitecolors)
+#text(par("usr")[1], par("usr")[4], "C.", font=2, xpd=NA, pos=2, cex=1.25)
+mtext(side=3, adj=-0.23, "C.", font=2)
+
+# Panel D
+with(por.bdsumm, {
+  plot(mean, type="n", ylim=c(0, 0.04), ylab="Distance to centroid", xaxt="n", 
+       xlab="Site")
+  arrows(1:6, mean - se, 1:6, mean + se, length=0.025, angle=90, code=3, lwd=0.5)
+  points(1:6, mean, cex=1, pch=1:6, col=sitecolors, lwd=2)
+  axis(side=1, at=1:6, cex.axis=0.75, labels=group)
+  text(1:6, mean+se+0.0035, l, cex=0.5)
+})
+#text(par("usr")[1]-0.3, par("usr")[4], "D.", font=2, xpd=NA, pos=2, cex=1.25)
+mtext(side=3, adj=-0.25, "D.", font=2)
+dev.off()
+```
+
 ## What temperature metrics (models) carry the most weight in describing beta diversity?
 ```{r model testing}
 ufdist <- UniFrac(phy.f.t, weighted=T, normalized=F, parallel=F, fast=T)
@@ -410,22 +511,26 @@ mod.test
 plot.bd.temp <- function(metric) {
   acrdat <- data.frame(sample_data(phy.f.t.acropora))[, metric]
   pordat <- data.frame(sample_data(phy.f.t.porites))[, metric]
-  plot(acr.bd$distances ~ acrdat, col="red", ylim=range(acr.bd$distances),
+  plot(NA, xlim=range(acrdat), ylim=range(acr.bd$distances),
        xlab=paste(metric, "(by Site)"), ylab="Distance to centroid")
-  points(por.bd$distances ~ pordat, col="black")
   acr.mod <- lm(acr.bd$distances ~ acrdat)
   acr.pval <- round(anova(acr.mod)$`Pr(>F)`[1], 3)
   por.mod <- lm(por.bd$distances ~ pordat)
   por.pval <- round(anova(por.mod)$`Pr(>F)`[1], 3)
-  if (acr.pval < 0.01) {  # If slope is significantly different from 0
-    abline(acr.mod, col="red")
-    legend("topleft", adj=c(0,1), bty="n", legend=paste("Acropora: p=", acr.pval), 
-           text.col="red")
+  if (acr.pval < 0.05) {  # If slope is significantly different from 0
+    abline(acr.mod, col="#d8b365")
+    text(x=par("usr")[1], y=quantile(par("usr")[3:4], 0.9), pos=4, 
+         labels=substitute(paste(italic("Acropora"), ": p=", acr.pval)),
+         col="#d8b365")
   }
-  if (por.pval < 0.01) {  # If slope is significantly different from 0
-    abline(por.mod, col="black")
-    legend("topleft", adj=c(0,3), bty="n", legend=paste("Porites: p=", por.pval))
+  if (por.pval < 0.05) {  # If slope is significantly different from 0
+    abline(por.mod, col="#5ab4ac")
+    text(x=par("usr")[1], y=quantile(par("usr")[3:4], 0.8), pos=4, 
+         labels=substitute(paste(italic("Porites"), ": p=", por.pval)),
+         col="#5ab4ac")
   }
+  points(acr.bd$distances ~ acrdat, pch=24, bg="#d8b365", lwd=0.5)
+  points(por.bd$distances ~ pordat, pch=25, bg="#5ab4ac", lwd=0.5)
 }
 
 # Plot beta diversity as a function of temperature PCs
@@ -446,6 +551,17 @@ plot.bd.temp("PC4")
 # plot.bd.temp("daily.mean.min")
 ```
 
+# Figure 4
+```{r Fig4}
+png("Output/Fig4.png", width=4, height=2, units="in", res=300)
+par(mfrow=c(1,2), mar=c(2,2,1,1), mgp=c(1.1,0.1,0), tcl=0.2, 
+    cex=0.6, cex.axis=0.8)
+plot.bd.temp("PC1")
+mtext(side=3, adj=-0.16, "A.", font=2, line=-0.3)
+plot.bd.temp("PC2")
+mtext(side=3, adj=-0.16, "B.", font=2, line=-0.3)
+dev.off()
+```
 
 ## Constrained ordination - do temperature metrics drive differences in community structure?
 Above, we use unconstrained ordinations (PCoA and/or NMDS) to look for relationships between samples. The unconstrained ordinations, however, do not provide a direct link to potential environmental factors influencing sample community structure.  
