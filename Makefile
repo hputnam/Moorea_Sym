@@ -1,5 +1,8 @@
 all: RAnalysis/Data/Moorea_97glo_sym.RData RAnalysis/Data/Moorea_sym.RData RAnalysis/Data/Moorea_sym100.RData
 
+RAnalysis/Data/tempdata.RData: RAnalysis/Scripts/temperature_analysis.R
+	R --vanilla < RAnalysis/Scripts/temperature_analysis.R
+
 # Filter out low read count taxa and samples from 97% within-sample OTUs
 RAnalysis/Data/Moorea_sym_f.RData: RAnalysis/Data/Moorea_sym.RData
 	R --vanilla < Bioinf/filter_phy.R --args $< RAnalysis/Data/Moorea_sym_f.RData
