@@ -43,17 +43,3 @@ sed 's/ .*//' RAnalysis/Data/D_tree_seqs_aligned.fasta > RAnalysis/Data/D_tree_s
 
 
 
-#convert otu table to biom format
-https://www.bioconductor.org/packages/release/bioc/html/biomformat.html
-
-# in R
-write.delim(data.frame(otu_table(phy.f)), "otu_table.tsv", quote = FALSE, row.names = T, sep = "\t")
-
-#in QIIME
-biom convert -i RAnalysis/Data/otu_table.tsv -o RAnalysis/Data/otu_table.biom --to-hdf5 --table-type="OTU table"
-
-#in bash
-nano RAnalysis/Data/otu_table.tsv 
-#add OTU tab
-
-beta_diversity.py -i RAnalysis/Data/otu_table.biom -t RAnalysis/Data/uber.tre -m weighted_unifrac -o RAnalysis/Data/ 
