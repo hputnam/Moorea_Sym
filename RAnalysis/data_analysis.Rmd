@@ -17,6 +17,7 @@ library(fmsb)
 library(vegan)
 library(lme4)
 library(MuMIn)
+library(imager)
 
 # Set options
 options(stringsAsFactors = FALSE)
@@ -120,10 +121,12 @@ par(mfrow=c(1,3), mgp=c(1,0.1,0), tcl=0.25, cex.lab=1, cex.axis=0.8,
 # Panel A
 #### MAP OF MOOREA SHOWING SITE LOCATIONS
 plot(1)
+# moorea <- readPNG('Output/Moorea_temp_logger_map.png')
+# plot(moorea, axes=F)
 
 # Panel B
 biplot(pca.temp, cex=0.8, bty="n", xpd=NA)
-title("B.", adj=0)
+title("b", adj=0)
 
 # Panel C
 par(mar=c(0,0,0,0), xpd=NA)
@@ -143,7 +146,7 @@ rad <- radarchart(
   #custom labels
   vlcex=0.8 
 )
-title("C.", adj=0)
+title("c", adj=0)
 legend("topright", rownames(temp2)[-(1:2)], lty=1, lwd=2, col=sitecolors, bty="n", 
        cex=0.6, ncol=2, inset=c(0.02,0.06))
 dev.off()
@@ -557,9 +560,9 @@ tiff("Output/Fig4.tiff", width=4, height=2, units="in", res=300)
 par(mfrow=c(1,2), mar=c(2,2,1,1), mgp=c(1.1,0.1,0), tcl=0.2, 
     cex=0.6, cex.axis=0.8)
 plot.bd.temp("PC1")
-mtext(side=3, adj=-0.16, "A.", font=2, line=-0.3)
+mtext(side=3, adj=-0.16, "a", font=2, line=-0.3)
 plot.bd.temp("PC2")
-mtext(side=3, adj=-0.16, "B.", font=2, line=-0.3)
+mtext(side=3, adj=-0.16, "b", font=2, line=-0.3)
 dev.off()
 ```
 
