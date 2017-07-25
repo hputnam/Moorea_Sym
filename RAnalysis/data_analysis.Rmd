@@ -111,7 +111,7 @@ legend("topright", rownames(temp2)[-(1:2)], lty=1, lwd=2, col=sitecolors, bty="n
 
 # Figure 1
 ```{r Fig1, eval=T}
-png("Output/Fig1.png", width=7, height=2.5, units="in", res=300)
+tiff("Output/Fig1.tiff", width=7, height=2.5, units="in", res=300)
 par(mfrow=c(1,3), mgp=c(1,0.1,0), tcl=0.25, cex.lab=1, cex.axis=0.8,
     mar=c(2,2,2,2))
 
@@ -246,7 +246,7 @@ composition <- function(phy, col, legend=T) {
   #}
 }
 
-png("Output/Fig2.png", width=3.5, height=5, units="in", res=300)
+tiff("Output/Fig2.tiff", width=3.5, height=5, units="in", res=300)
 par(mfrow=c(1,1), mar=c(2, 1.5, 2, 10), lwd=0.1, cex=0.7, xpd=NA)
 # Plot composition of 97% within-sample OTUs colored by clade
 composition(phy.f.p, col=taxcolors[factor(data.frame(tax_table(phy.f.p))[order(data.frame(tax_table(phy.f.p))$Subtype), ]$Clade, levels=c("A","C","D"))], legend=T)
@@ -413,55 +413,60 @@ with(por.bdsumm, {
 
 # Figure 3
 ```{r Fig3}
-png("Output/Fig3.png", width=4, height=4, units="in", res=300)
+tiff("Output/Fig3.tiff", width=4, height=4, units="in", res=300)
 par(mfrow=c(2,2), mar=c(2,2,1,1), mgp=c(1.1,0.1,0), tcl=0.2, 
     cex.axis=0.8, cex.lab=1)
 
 # Panel A
 plot(acr.bd, hull=F, label=F, col=sitecolors, seg.col=sitecolors,
-     xlab="Axis 1", ylab="Axis 2", main="", cex=1)
+     xlab="PCoA 1", ylab="PCoA 2", main="", cex=1)
 ordihull(acr.bd, sample_data(phy.f.t.acropora)$Site,  draw = c("polygon"),
          col = sitecolors, alpha=0.2, lwd=0.05)
-legend("topright", bty="n", pch=1:6, cex=0.6,
-       legend=levels(sample_data(phy.f.t.acropora)$Site),
-       col=sitecolors)
+# legend("topright", bty="n", pch=1:6, cex=0.6,
+#        legend=levels(sample_data(phy.f.t.acropora)$Site),
+#        col=sitecolors)
 #text(par("usr")[1], par("usr")[4], "A.", font=2, xpd=NA, pos=2, cex=1.25)
-mtext(side=3, adj=-0.23, "A.", font=2)
+mtext(side=3, adj=-0.23, "a", font=2)
+mtext(side=3, adj=0.95, padj=1.7, substitute(paste(italic("Acropora"))), font=2, cex=0.75)
 
 # Panel B
 with(acr.bdsumm, {
   plot(mean, type="n", ylim=c(0, 0.15), ylab="Distance to centroid", xaxt="n", 
-       xlab="Site")
-  arrows(1:6, mean - se, 1:6, mean + se, length=0.025, angle=90, code=3, lwd=0.5)
+       xlab="Site",xlim=c(0.85,6.15))
   points(1:6, mean, cex=1, pch=1:6, col=sitecolors, lwd=2)
-  axis(side=1, at=1:6, cex.axis=0.75, labels=group)
+  arrows(1:6, mean - se, 1:6, mean + se, length=0.025, angle=90, code=3, lwd=0.5)
+  axis(side=1, at=1:6, cex.axis=0.75, labels=c(1,2,3,7,8,9))
   text(1:6, mean+se+0.01, l, cex=0.5)
 })
 #text(par("usr")[1]-0.3, par("usr")[4], "B.", font=2, xpd=NA, pos=2, cex=1.25)
-mtext(side=3, adj=-0.25, "B.", font=2)
+mtext(side=3, adj=-0.25, "b", font=2)
+mtext(side=3, adj=0.95, padj=1.7, substitute(paste(italic("Acropora"))), font=2, cex=0.75)
 
 # Panel C
 plot(por.bd, hull=F, label=F, col=sitecolors, seg.col=sitecolors,
-     xlab="Axis 1", ylab="Axis 2", main="", cex=1)
+     xlab="PCoA 1", ylab="PCoA 2", main="", cex=1)
 ordihull(por.bd, sample_data(phy.f.t.porites)$Site,  draw = c("polygon"),
          col = sitecolors, alpha=0.2, lwd=0.05)
-legend("topright", bty="n", pch=1:6, cex=0.6,
-       legend=levels(sample_data(phy.f.t.porites)$Site),
-       col=sitecolors)
+# legend("topright", bty="n", pch=1:6, cex=0.6,
+#        legend=levels(sample_data(phy.f.t.porites)$Site),
+#        col=sitecolors)
 #text(par("usr")[1], par("usr")[4], "C.", font=2, xpd=NA, pos=2, cex=1.25)
-mtext(side=3, adj=-0.23, "C.", font=2)
+mtext(side=3, adj=-0.23, "c", font=2)
+mtext(side=3, adj=0.95, padj=1.85, substitute(paste(italic("Porites"))), font=2, cex=0.75)
 
 # Panel D
 with(por.bdsumm, {
   plot(mean, type="n", ylim=c(0, 0.04), ylab="Distance to centroid", xaxt="n", 
-       xlab="Site")
-  arrows(1:6, mean - se, 1:6, mean + se, length=0.025, angle=90, code=3, lwd=0.5)
+       xlab="Site",xlim=c(0.85,6.15))
   points(1:6, mean, cex=1, pch=1:6, col=sitecolors, lwd=2)
-  axis(side=1, at=1:6, cex.axis=0.75, labels=group)
+  arrows(1:6, mean - se, 1:6, mean + se, length=0.025, angle=90, code=3, lwd=0.5)
+  axis(side=1, at=1:6, cex.axis=0.75, labels=c(1,2,3,7,8,9))
   text(1:6, mean+se+0.0035, l, cex=0.5)
 })
 #text(par("usr")[1]-0.3, par("usr")[4], "D.", font=2, xpd=NA, pos=2, cex=1.25)
-mtext(side=3, adj=-0.25, "D.", font=2)
+mtext(side=3, adj=-0.25, "d", font=2)
+mtext(side=3, adj=0.95, padj=1.85, substitute(paste(italic("Porites"))), font=2, cex=0.75)
+
 dev.off()
 ```
 
@@ -548,7 +553,7 @@ plot.bd.temp("PC4")
 
 # Figure 4
 ```{r Fig4}
-png("Output/Fig4.png", width=4, height=2, units="in", res=300)
+tiff("Output/Fig4.tiff", width=4, height=2, units="in", res=300)
 par(mfrow=c(1,2), mar=c(2,2,1,1), mgp=c(1.1,0.1,0), tcl=0.2, 
     cex=0.6, cex.axis=0.8)
 plot.bd.temp("PC1")
