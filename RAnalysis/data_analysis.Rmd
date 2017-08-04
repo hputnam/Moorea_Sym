@@ -17,6 +17,7 @@ library(fmsb)
 library(vegan)
 library(lme4)
 library(MuMIn)
+library(imager)
 
 # Set options
 options(stringsAsFactors = FALSE)
@@ -114,14 +115,18 @@ legend("topright", rownames(temp2)[-(1:2)], lty=1, lwd=2, col=sitecolors, bty="n
 tiff("Output/Fig1.tiff", width=7, height=2.5, units="in", res=300)
 par(mfrow=c(1,3), mgp=c(1,0.1,0), tcl=0.25, cex.lab=1, cex.axis=0.8,
     mar=c(2,2,2,2))
+layout(matrix(c(1,2,3), nrow=1, ncol=3, byrow = TRUE), heights=c(1,1,1))
+
 
 
 # Panel A
 #### MAP OF MOOREA SHOWING SITE LOCATIONS
-plot(1)
+moorea <- load.image('Output/Moorea_temp_logger_map.png')
+plot(moorea, axes=F, rescale=FALSE)
+title("a", adj=0)
 
 # Panel B
-biplot(pca.temp, cex=0.8, bty="n", xpd=NA)
+biplot(pca.temp, cex=0.8, bty="n", xpd=NA,expand=0.65)
 title("b", adj=0)
 
 # Panel C
