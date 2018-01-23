@@ -159,8 +159,8 @@ dev.off()
 ## Load *Symbiodinium* data
 ```{r load_sym}
 # Load Symbiodinium data from saved phyloseq objects
-load("Data/Moorea_sym100_f.RData")  # loads phyloseq object for 100% OTUs named phy.f
-phy100.f <- phy.f # renames to phy100.f
+#load("Data/Moorea_sym100_f.RData")  # loads phyloseq object for 100% OTUs named phy.f
+#phy100.f <- phy.f # renames to phy100.f
 load("Data/Moorea_sym_f.RData")  # loads phyloseq object for 97%-within-sample OTUs named phy.f
 
 # Append site temperature metrics to sample_data in phyloseq objects
@@ -178,18 +178,18 @@ sample_data(phy.f)$PC1 <- temp.PCs[site.levels, "PC1"]
 sample_data(phy.f)$PC2 <- temp.PCs[site.levels, "PC2"]
 sample_data(phy.f)$PC3 <- temp.PCs[site.levels, "PC3"]
 sample_data(phy.f)$PC4 <- temp.PCs[site.levels, "PC4"]
-sample_data(phy100.f)$PC1 <- temp.PCs[site.levels, "PC1"]
-sample_data(phy100.f)$PC2 <- temp.PCs[site.levels, "PC2"]
-sample_data(phy100.f)$PC3 <- temp.PCs[site.levels, "PC3"]
-sample_data(phy100.f)$PC4 <- temp.PCs[site.levels, "PC4"]
+#sample_data(phy100.f)$PC1 <- temp.PCs[site.levels, "PC1"]
+#sample_data(phy100.f)$PC2 <- temp.PCs[site.levels, "PC2"]
+#sample_data(phy100.f)$PC3 <- temp.PCs[site.levels, "PC3"]
+#sample_data(phy100.f)$PC4 <- temp.PCs[site.levels, "PC4"]
 
 # Convert OTU counts to proportions (relative abundances)
 phy.f.p <- transform_sample_counts(phy.f, function(x) x/sum(x))
-phy100.f.p <- transform_sample_counts(phy100.f, function(x) x/sum(x))
+#phy100.f.p <- transform_sample_counts(phy100.f, function(x) x/sum(x))
 # Square-root transform relative abundances
 transform <- function(x) sqrt(x/sum(x))  # Set transformation function
 phy.f.t <- transform_sample_counts(phy.f, transform)  # Transform data
-phy100.f.t <- transform_sample_counts(phy100.f, transform)  # Transform data
+#phy100.f.t <- transform_sample_counts(phy100.f, transform)  # Transform data
 ```
 
 ## Visualize *Symbiodinium* clade abundances
@@ -699,7 +699,7 @@ vif.cca(finalmodel.acropora.alltempmetrics)
 ```
 
 ## New idea for analysis: how much of the variability in Symbiodinium communities can be explained by "Site" alone?
-```{r constrained_ordination site}
+```{r constrained_ordination site, eval=F}
 
 acropora.CAP.site <- ordinate(phy.f.t.acropora, method="CAP", distance="wunifrac",
                               formula= ~ factor(Site))
