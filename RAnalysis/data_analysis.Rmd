@@ -1,7 +1,7 @@
 ---
 title: "data_analysis.Rmd"
 author: "Ross Cunning, Hollie Putnam, Danielle Claar"
-date: "6/13/2017"
+date: "1/23/2018"
 output: html_document
 ---
 
@@ -18,6 +18,9 @@ library(vegan)
 library(lme4)
 library(MuMIn)
 library(imager)
+library(devtools)
+
+
 
 # Set options
 options(stringsAsFactors = FALSE)
@@ -605,10 +608,23 @@ anova.cca(finalmodel.porites.PCs)
 # Testing the significance of terms (environmental variables):
 anova.cca(finalmodel.porites.PCs, by="terms")
 # Testing the significance of axes (at least the first two or three should present a significant p value):
+
+# Since the anova.cca function is broken on the current CRAN release of vegan, create a developer environment where you can use the most updated version 2.5.0 as of 23Jan2018.
+# Since we use vegan in multiple places, I didn't want to just load the dev version as the default vegan version.
+# I know this is a mess, but it works for now.
+dev_mode(on=T)
+devtools::install_github("vegandevs/vegan") # Will take a minute to install
+unloadNamespace("phyloseq")
+unloadNamespace("vegan")
+library(vegan)
+finalmodel.porites.PCs <- update(finalmodel.porites.PCs) # to work with the dev version of vegan
 anova.cca(finalmodel.porites.PCs, by="axis")
 # Excellent, all of these test are significant. This means that the final model (Porites), distance ~ PC1 can be used.
+unloadNamespace("vegan")
+dev_mode(on=F)
 
-
+library(vegan)
+library(phyloseq)
 # Next try model selection using temperature metrics
 ord.porites.CAP2 <- ordinate(phy.f.t.porites,method="CAP",distance="wunifrac",formula= ~ mean+var+dip+daily.mean.min+daily.mean.max+daysover30+daysunder27)
 plot_ordination(phy.f.t.porites, ord.porites.CAP2,  shape="Site",type="scree",
@@ -636,10 +652,19 @@ anova.cca(finalmodel.porites.alltempmetrics)
 # Testing the significance of terms (environmental variables):
 anova.cca(finalmodel.porites.alltempmetrics, by="terms")
 # Testing the significance of axes (at least the first two or three should present a significant p value):
+
+dev_mode(on=T)
+unloadNamespace("phyloseq")
+unloadNamespace("vegan")
+library(vegan)
+finalmodel.porites.alltempmetrics <- update(finalmodel.porites.alltempmetrics) # to work with the dev version of vegan
 anova.cca(finalmodel.porites.alltempmetrics, by="axis")
 # Excellent, all of these test are significant. This means that the final model (Porites), distance ~ daysunder27 can be used.
+unloadNamespace("vegan")
+dev_mode(on=F)
 
-
+library(vegan)
+library(phyloseq)
 
 
 # ACROPORA
@@ -671,9 +696,18 @@ anova.cca(finalmodel.acropora.PCs)
 # Testing the significance of terms (environmental variables):
 anova.cca(finalmodel.acropora.PCs, by="terms")
 # Testing the significance of axes (at least the first two or three should present a significant p value):
-# anova.cca(finalmodel.acropora.PCs, by="axis") # For some reason this one doesn't work?
-# These test are significant. This means that the final model (Acropora), distance ~ PC2 + PC4 can be used.
 
+dev_mode(on=T)
+unloadNamespace("phyloseq")
+unloadNamespace("vegan")
+library(vegan)
+finalmodel.acropora.PCs <- update(finalmodel.porites.alltempmetrics) # to work with the dev version of vegan
+anova.cca(finalmodel.acropora.PCs, by="axis") 
+# These test are significant. This means that the final model (Acropora), distance ~ PC2 + PC4 can be used.unloadNamespace("vegan")
+dev_mode(on=F)
+
+library(vegan)
+library(phyloseq)
 
 # Now we can look at individual temperature metrics (rather than PCs)
 ord.acropora.CAP2 <- ordinate(phy.f.t.acropora,method="CAP",distance="wunifrac",formula= ~ mean+var+dip+daily.mean.min+daily.mean.max+daysover30+daysunder27)
