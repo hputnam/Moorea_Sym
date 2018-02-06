@@ -595,7 +595,7 @@ plot_ordination(phy.f.t.porites, ord.porites.CAP, color="Site", shape="Site",
 anova(ord.porites.CAP)
 
 # In a model with all 4 PCs included, this model (Porites, PCs 1-4) is not significant at p=0.05, but is at p=0.1
-
+set.seed(2000)
 finalmodel.porites.PCs <- ordistep(ord.porites.CAP, formula= ~ PC1 + PC2 + PC3 + PC4, direction = c("both"), Pin = 0.05, Pout = 0.1, pstep = 100, perm.max = 1000, steps = 50, trace = TRUE)
 
 finalmodel.porites.PCs
@@ -641,6 +641,7 @@ anova(ord.porites.CAP2)
 
 # In a model with all 4 PCs included, this model (Porites, all temp metrics) is not significant at p=0.1
 
+set.seed(2000)
 finalmodel.porites.alltempmetrics <- ordistep(ord.porites.CAP2, formula= ~ mean+var+dip+daily.mean.min+daily.mean.max+daysover30+daysunder27, direction = c("both"), Pin = 0.05, Pout = 0.1, pstep = 100, perm.max = 1000, steps = 50, trace = TRUE)
 
 finalmodel.porites.alltempmetrics
@@ -684,7 +685,7 @@ anova(ord.acropora.CAP)
 
 # In a model with all 4 PCs included, this model (Acropora, PCs 1-4) is significant at p=0.05
 
-
+set.seed(2000)
 finalmodel.acropora.PCs<-ordistep(ord.acropora.CAP, formula= ~ PC1 + PC2 + PC3 + PC4, direction = c("both"), Pin = 0.05, Pout = 0.1, pstep = 100, perm.max = 1000, steps = 50, trace = TRUE)
 
 finalmodel.acropora.PCs
@@ -725,6 +726,7 @@ anova(ord.acropora.CAP2)
 
 # In a model with all temp metrics included, this model (Acropora, all temp metrics) is significant at p=0.05
 
+set.seed(2000)
 finalmodel.acropora.alltempmetrics<-ordistep(ord.acropora.CAP2, formula= ~ mean+var+dip+daily.mean.min+daily.mean.max+daysover30+daysunder27, direction = c("both"), Pin = 0.05, Pout = 0.1, pstep = 100, perm.max = 1000, steps = 50, trace = TRUE)
 
 finalmodel.acropora.alltempmetrics
@@ -733,7 +735,7 @@ finalmodel.acropora.alltempmetrics
 # Now, we test to make sure that this model holds up
 vif.cca(finalmodel.acropora.alltempmetrics)
 # These metrics are correlated. This is problematic, and may suggest that our PC approach is indeed better, as we deal with collinearity before ordination.
-
+anova(finalmodel.acropora.alltempmetrics)
 ```
 
 ## New idea for analysis: how much of the variability in Symbiodinium communities can be explained by "Site" alone?
