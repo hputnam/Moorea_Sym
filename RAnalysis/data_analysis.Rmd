@@ -53,6 +53,23 @@ hist(temp.all$Site.8, xlim=c(25,32), breaks=seq(25,32,0.25),
 hist(temp.all$Site.9, xlim=c(25,32), breaks=seq(25,32,0.25), 
      main="Site 9", xlab="Temp ?C")
 
+# Plot mean daily cycle for each site
+time.mean<-aggregate(cbind(temp.all$Site.1,temp.all$Site.2,temp.all$Site.3,temp.all$Site.7,temp.all$Site.8,temp.all$Site.9) ~ temp.all$Time, FUN=mean)
+colnames(time.mean) <- c("Time","Site.1","Site.2","Site.3","Site.7","Site.8","Site.9")
+time.mean$Time <- as.POSIXct(time.mean$Time, format="%H:%M")
+par(mfrow=c(1,1), mar=c(3,3,2,2), mgp=c(1.5,0.1,0), tcl=-0.2)
+with(time.mean, {
+  plot(Time, Site.1, type="b", ylim=range(time.mean[,2:7]), col=sitecolors[1])
+  points(Time, Site.2, type="b", col=sitecolors[2])
+  points(Time, Site.3, type="b", col=sitecolors[3])
+  points(Time, Site.7, type="b", col=sitecolors[4])
+  points(Time, Site.8, type="b", col=sitecolors[5])
+  points(Time, Site.9, type="b", col=sitecolors[6])
+})
+legend("bottom", lty=1, legend=c("Site 1", "Site 2", "Site 3", "Site 7", "Site 8", "Site 9"),
+       col=sitecolors, ncol=4, cex=0.7)
+
+
 # View Descriptive Stats
 temp.summ
 ```
@@ -66,13 +83,19 @@ temp.summ
 include <- c("mean", "var", "dip", "daily.mean.min", 
              "daily.mean.max", "daysover30", "daysunder27")
 
+include <- c("mean", "var", "dip", "daily.mean.min", "daily.mean.max", "daily.mean.range", "daysover30", "daysunder27", "daily.mean.var")
+
+include <- c("mean", "var", "daysover30", "daysunder27", "daily.mean.range")
+
 ## Subset temperature metrics for PCA
 temp <- as.data.frame(temp.summ[, include])
+
+
 
 ## Run PCA
 pca.temp <- prcomp(temp, scale=TRUE)
 par(mfrow=c(1,1))
-screeplot(pca.temp)
+#screeplot(pca.temp)
 
 ## Calculate loading values of original metrics
 aload <- abs(pca.temp$rotation)
@@ -83,6 +106,7 @@ temp.PCs <- pca.temp$x
 
 ## Visualize PCA as biplot
 biplot(pca.temp)
+summary(pca.temp)
 ```
 
 ### Temperature regime radar chart
@@ -90,7 +114,7 @@ biplot(pca.temp)
 # Calculate ranges of each column
 temp2 <- rbind(apply(temp, 2, function(x) rev(range(x))), temp)
 # Reorder columns
-temp2 <- temp2[, c(3,4,1,6,2,5,7)]
+temp2 <- temp2[, c(1,5,2,3,4)]
 # Plot radar chart
 rad <- radarchart(
   temp2,
@@ -130,7 +154,7 @@ title("a", adj=0)
 
 # Panel B
 biplot(pca.temp, cex=0.9, bty="n", xpd=NA, expand=1.1,
-       ylabs=c("Dip","Daily Mean\nMinimum   ","Mean","Days\nOver 30°C","Variance","Daily Mean    \nMaximum   ","Days Under\n27°C"),
+       ylabs=c("Dip","Daily Mean\nMinimum   ","Mean","Days\nOver 30?C","Variance","Daily Mean    \nMaximum   ","Days Under\n27?C"),
        xlim=c(-0.85,0.75),
        ylim=c(-0.75,0.75))
 title("b", adj=0)
@@ -152,7 +176,7 @@ rad <- radarchart(
  
   #custom labels
   vlcex=1, 
-  vlabels = c("Dip","Daily Mean\nMinimum","Mean","Days Over\n30°C","Variance","       Daily Mean\n       Maximum","Days Under\n27°C")
+  vlabels = c("Mean", "Mean Daily Range", "Variance", "Days over 30", "Days under 27")
 )
 title("c", adj=0.05, line = 0)
 legend("topright", rownames(temp2)[-(1:2)], lty=1, lwd=2, col=sitecolors, bty="n", 
@@ -174,9 +198,10 @@ load("Data/Moorea_sym_f.RData")  # loads phyloseq object for 97%-within-sample O
 site.levels <- as.numeric(sample_data(phy.f)$Site)
 sample_data(phy.f)$mean <- temp[site.levels, "mean"]
 sample_data(phy.f)$var <- temp[site.levels, "var"]
-sample_data(phy.f)$dip <- temp[site.levels, "dip"]
-sample_data(phy.f)$daily.mean.min <- temp[site.levels, "daily.mean.min"]
-sample_data(phy.f)$daily.mean.max <- temp[site.levels, "daily.mean.max"]
+#sample_data(phy.f)$dip <- temp[site.levels, "dip"]
+#sample_data(phy.f)$daily.mean.min <- temp[site.levels, "daily.mean.min"]
+#sample_data(phy.f)$daily.mean.max <- temp[site.levels, "daily.mean.max"]
+sample_data(phy.f)$daily.mean.range <- temp[site.levels, "daily.mean.range"]
 sample_data(phy.f)$daysover30 <- temp[site.levels, "daysover30"]
 sample_data(phy.f)$daysunder27 <- temp[site.levels, "daysover30"]
 
@@ -489,11 +514,12 @@ bd <- betadisper(d=ufdist, group=sample_data(phy.f.t)$Site,
 
 temp.var <- as.data.frame(sample_data(phy.f.t)[, "var"])
 temp.mean <- as.data.frame(sample_data(phy.f.t)[, "mean"])
-temp.dip <- as.data.frame(sample_data(phy.f.t)[, "dip"])
+#temp.dip <- as.data.frame(sample_data(phy.f.t)[, "dip"])
 temp.do30 <- as.data.frame(sample_data(phy.f.t)[, "daysover30"])
 temp.du27 <- as.data.frame(sample_data(phy.f.t)[, "daysunder27"])
-temp.dmmax <- as.data.frame(sample_data(phy.f.t)[, "daily.mean.max"])
-temp.dmmin <- as.data.frame(sample_data(phy.f.t)[, "daily.mean.min"])
+#temp.dmmax <- as.data.frame(sample_data(phy.f.t)[, "daily.mean.max"])
+#temp.dmmin <- as.data.frame(sample_data(phy.f.t)[, "daily.mean.min"])
+temp.dmrange <- as.data.frame(sample_data(phy.f.t)[, "daily.mean.range"])
 species <- sample_data(phy.f.t)$Species
 site <- sample_data(phy.f.t)$Site
 
@@ -501,13 +527,14 @@ hist(log(bd$distances))
 
 mod.var <- lmer(log(bd$distances) ~ temp.var$var*species + 1|site)
 mod.mean <- lmer(log(bd$distances) ~ temp.mean$mean*species + 1|site)
-mod.dip <- lmer(log(bd$distances) ~ temp.dip$dip*species + 1|site)
+#mod.dip <- lmer(log(bd$distances) ~ temp.dip$dip*species + 1|site)
 mod.do30 <- lmer(log(bd$distances) ~ temp.do30$daysover30*species + 1|site)
 mod.du27 <- lmer(log(bd$distances) ~ temp.du27$daysunder27*species + 1|site)
-mod.dmmax <- lmer(log(bd$distances) ~ temp.dmmax$daily.mean.max*species + 1|site)
-mod.dmmin <- lmer(log(bd$distances) ~ temp.dmmin$daily.mean.min*species + 1|site)
+#mod.dmmax <- lmer(log(bd$distances) ~ temp.dmmax$daily.mean.max*species + 1|site)
+#mod.dmmin <- lmer(log(bd$distances) ~ temp.dmmin$daily.mean.min*species + 1|site)
+mod.dmrange <- lmer(log(bd$distances) ~ temp.dmrange$daily.mean.range*species + 1|site)
 
-mod.test <- AICc(mod.do30, mod.du27,mod.var, mod.dip, mod.dmmax, mod.dmmin, mod.mean,  k = 2, REML = T)
+mod.test <- AICc(mod.do30, mod.du27,mod.var, mod.dmrange, mod.mean,  k = 2, REML = T)
 mod.test$deltas <- round(mod.test$AICc-min(mod.test$AICc), 2)
 mod.test$weights <- Weights(mod.test$AICc)
 mod.test
@@ -545,7 +572,7 @@ plot.bd.temp <- function(metric) {
 }
 
 # Plot beta diversity as a function of temperature PCs
-par(mfrow=c(2,2), mar=c(2.5,2.5,1,1), mgp=c(1.5,0.3,0), tcl=-0.2)
+par(mfrow=c(2,2), mar=c(2.5,2.5,1,1), mgp=c(1.5,0.3,0), tcl=-0.2, xpd=F)
 plot.bd.temp("PC1")
 plot.bd.temp("PC2")
 plot.bd.temp("PC3")
@@ -553,12 +580,12 @@ plot.bd.temp("PC4")
 
 # # Plot beta diversity as a function of original temperature metrics
 # par(mfrow=c(2,2), mar=c(2.5,2.5,1,1), mgp=c(1.5,0.3,0), tcl=-0.2)
-# plot.bd.temp("var")
-# plot.bd.temp("mean")
-# plot.bd.temp("dip")
-# plot.bd.temp("daysover30")
-# plot.bd.temp("daysunder27")
-# plot.bd.temp("daily.mean.max")
+plot.bd.temp("var")
+#plot.bd.temp("mean")
+#plot.bd.temp("dip")
+plot.bd.temp("daysover30")
+plot.bd.temp("daysunder27")
+plot.bd.temp("daily.mean.range")
 # plot.bd.temp("daily.mean.min")
 ```
 
