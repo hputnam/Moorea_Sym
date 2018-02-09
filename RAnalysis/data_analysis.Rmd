@@ -20,8 +20,6 @@ library(MuMIn)
 library(imager)
 library(devtools)
 
-
-
 # Set options
 options(stringsAsFactors = FALSE)
 
@@ -69,32 +67,20 @@ with(time.mean, {
 legend("bottom", lty=1, legend=c("Site 1", "Site 2", "Site 3", "Site 7", "Site 8", "Site 9"),
        col=sitecolors, ncol=4, cex=0.7)
 
-
 # View Descriptive Stats
 temp.summ
-
-
 ```
 
 ## Multivariate temperature analysis
 ### Principal component analysis
 ```{r temp_pca}
-# Principal component analysis of temperature metrics
-
 ## Set which temperature metrics to include in PCA
-#include <- c("var", 
-#             "daily.mean.range", "daily.range.skewness", "daily.range.kurtosis", "daysover30")
-
 include <- c("var", "daily.mean.range", "daysover30")
-
-#include <- c("mean", "var", "dip", "daily.mean.min", "daily.mean.max", "daily.mean.range", #"daysover30", "daysunder27", "daily.mean.var", "skew")
-
-#include <- c("mean", "var", "daysover30", "daysunder27", "daily.mean.range")
+#include <- c("mean", "var", "daily.mean.min", "daily.mean.max", "daily.mean.range",
+#             "daysover30", "daysunder27")
 
 ## Subset temperature metrics for PCA
 temp <- as.data.frame(temp.summ[, include])
-
-
 
 ## Run PCA
 pca.temp <- prcomp(temp, scale=TRUE)
@@ -200,32 +186,31 @@ load("Data/Moorea_sym_f.RData")  # loads phyloseq object for 97%-within-sample O
 
 # Append site temperature metrics to sample_data in phyloseq objects
 site.levels <- as.numeric(sample_data(phy.f)$Site)
-sample_data(phy.f)$mean <- temp[site.levels, "mean"]
-sample_data(phy.f)$var <- temp[site.levels, "var"]
+sample_data(phy.f)$mean <- temp.summ[site.levels, "mean"]
+sample_data(phy.f)$var <- temp.summ[site.levels, "var"]
 #sample_data(phy.f)$dip <- temp[site.levels, "dip"]
-#sample_data(phy.f)$daily.mean.min <- temp[site.levels, "daily.mean.min"]
-#sample_data(phy.f)$daily.mean.max <- temp[site.levels, "daily.mean.max"]
-sample_data(phy.f)$daily.mean.range <- temp[site.levels, "daily.mean.range"]
-sample_data(phy.f)$daysover30 <- temp[site.levels, "daysover30"]
-sample_data(phy.f)$daysunder27 <- temp[site.levels, "daysover30"]
+sample_data(phy.f)$daily.mean.min <- temp.summ[site.levels, "daily.mean.min"]
+sample_data(phy.f)$daily.mean.max <- temp.summ[site.levels, "daily.mean.max"]
+sample_data(phy.f)$daily.mean.range <- temp.summ[site.levels, "daily.mean.range"]
+sample_data(phy.f)$daysover30 <- temp.summ[site.levels, "daysover30"]
+sample_data(phy.f)$daysunder27 <- temp.summ[site.levels, "daysunder27"]
 
 # Append site temperature PCs to sample_data in phyloseq objects
 sample_data(phy.f)$PC1 <- temp.PCs[site.levels, "PC1"]
 sample_data(phy.f)$PC2 <- temp.PCs[site.levels, "PC2"]
 sample_data(phy.f)$PC3 <- temp.PCs[site.levels, "PC3"]
 sample_data(phy.f)$PC4 <- temp.PCs[site.levels, "PC4"]
-#sample_data(phy100.f)$PC1 <- temp.PCs[site.levels, "PC1"]
-#sample_data(phy100.f)$PC2 <- temp.PCs[site.levels, "PC2"]
-#sample_data(phy100.f)$PC3 <- temp.PCs[site.levels, "PC3"]
-#sample_data(phy100.f)$PC4 <- temp.PCs[site.levels, "PC4"]
+
 
 # Convert OTU counts to proportions (relative abundances)
 phy.f.p <- transform_sample_counts(phy.f, function(x) x/sum(x))
-#phy100.f.p <- transform_sample_counts(phy100.f, function(x) x/sum(x))
 # Square-root transform relative abundances
 transform <- function(x) sqrt(x/sum(x))  # Set transformation function
 phy.f.t <- transform_sample_counts(phy.f, transform)  # Transform data
-#phy100.f.t <- transform_sample_counts(phy100.f, transform)  # Transform data
+
+# Save OTU table and tax table as supplementary tables
+write.csv(otu_table(phy.f.p), file="Output/OTU_table.csv", row.names=F, quote=F)
+write.csv(tax_table(phy.f.p), file="Output/tax_table.csv", row.names=F, quote=F)
 ```
 
 ## Visualize *Symbiodinium* clade abundances
@@ -521,8 +506,8 @@ temp.mean <- as.data.frame(sample_data(phy.f.t)[, "mean"])
 #temp.dip <- as.data.frame(sample_data(phy.f.t)[, "dip"])
 temp.do30 <- as.data.frame(sample_data(phy.f.t)[, "daysover30"])
 temp.du27 <- as.data.frame(sample_data(phy.f.t)[, "daysunder27"])
-#temp.dmmax <- as.data.frame(sample_data(phy.f.t)[, "daily.mean.max"])
-#temp.dmmin <- as.data.frame(sample_data(phy.f.t)[, "daily.mean.min"])
+temp.dmmax <- as.data.frame(sample_data(phy.f.t)[, "daily.mean.max"])
+temp.dmmin <- as.data.frame(sample_data(phy.f.t)[, "daily.mean.min"])
 temp.dmrange <- as.data.frame(sample_data(phy.f.t)[, "daily.mean.range"])
 species <- sample_data(phy.f.t)$Species
 site <- sample_data(phy.f.t)$Site
@@ -534,8 +519,8 @@ mod.mean <- lmer(log(bd$distances) ~ temp.mean$mean*species + 1|site)
 #mod.dip <- lmer(log(bd$distances) ~ temp.dip$dip*species + 1|site)
 mod.do30 <- lmer(log(bd$distances) ~ temp.do30$daysover30*species + 1|site)
 mod.du27 <- lmer(log(bd$distances) ~ temp.du27$daysunder27*species + 1|site)
-#mod.dmmax <- lmer(log(bd$distances) ~ temp.dmmax$daily.mean.max*species + 1|site)
-#mod.dmmin <- lmer(log(bd$distances) ~ temp.dmmin$daily.mean.min*species + 1|site)
+mod.dmmax <- lmer(log(bd$distances) ~ temp.dmmax$daily.mean.max*species + 1|site)
+mod.dmmin <- lmer(log(bd$distances) ~ temp.dmmin$daily.mean.min*species + 1|site)
 mod.dmrange <- lmer(log(bd$distances) ~ temp.dmrange$daily.mean.range*species + 1|site)
 
 mod.test <- AICc(mod.do30, mod.du27,mod.var, mod.dmrange, mod.mean,  k = 2, REML = T)
@@ -561,13 +546,13 @@ plot.bd.temp <- function(metric) {
   por.pval <- round(anova(por.mod)$`Pr(>F)`[1], 3)
   if (acr.pval < 0.05) {  # If slope is significantly different from 0
     abline(acr.mod, col="#d8b365")
-    text(x=par("usr")[1], y=quantile(par("usr")[3:4], 0.9), pos=4, 
+    text(x=par("usr")[2], y=quantile(par("usr")[3:4], 0.9), pos=2, 
          labels=substitute(paste(italic("Acropora"), ": p=", acr.pval)),
          col="#d8b365")
   }
   if (por.pval < 0.05) {  # If slope is significantly different from 0
     abline(por.mod, col="#5ab4ac")
-    text(x=par("usr")[1], y=quantile(par("usr")[3:4], 0.8), pos=4, 
+    text(x=par("usr")[2], y=quantile(par("usr")[3:4], 0.8), pos=2, 
          labels=substitute(paste(italic("Porites"), ": p=", por.pval)),
          col="#5ab4ac")
   }
@@ -576,11 +561,11 @@ plot.bd.temp <- function(metric) {
 }
 
 # Plot beta diversity as a function of temperature PCs
-par(mfrow=c(2,2), mar=c(2.5,2.5,1,1), mgp=c(1.5,0.3,0), tcl=-0.2, xpd=F)
+par(mfrow=c(1,2), mar=c(2.5,2.5,1,1), mgp=c(1.5,0.3,0), tcl=-0.2, xpd=F)
 plot.bd.temp("PC1")
 plot.bd.temp("PC2")
-plot.bd.temp("PC3")
-plot.bd.temp("PC4")
+
+
 
 # # Plot beta diversity as a function of original temperature metrics
 # par(mfrow=c(2,2), mar=c(2.5,2.5,1,1), mgp=c(1.5,0.3,0), tcl=-0.2)
@@ -588,21 +573,41 @@ plot.bd.temp("var")
 #plot.bd.temp("mean")
 #plot.bd.temp("dip")
 plot.bd.temp("daysover30")
-plot.bd.temp("daysunder27")
+#plot.bd.temp("daysunder27")
 plot.bd.temp("daily.mean.range")
 # plot.bd.temp("daily.mean.min")
 ```
 
 # Figure 4
 ```{r Fig4}
-tiff("Output/Fig4.tiff", width=4, height=2, units="in", res=300)
-par(mfrow=c(1,2), mar=c(2,2,1,1), mgp=c(1.1,0.1,0), tcl=0.2, 
+tiff("Output/Fig4.tiff", width=2, height=2, units="in", res=300)
+par(mfrow=c(1,1), mar=c(2,2,1,1), mgp=c(1.1,0.1,0), tcl=0.2, 
     cex=0.6, cex.axis=0.8)
 plot.bd.temp("PC1")
 mtext(side=3, adj=-0.16, "a", font=2, line=-0.3)
-plot.bd.temp("PC2")
-mtext(side=3, adj=-0.16, "b", font=2, line=-0.3)
+#plot.bd.temp("PC2")
+#mtext(side=3, adj=-0.16, "b", font=2, line=-0.3)
 dev.off()
+```
+
+## Constrained ordination -- abbreviated version
+Use the three highly correlated temperature metrics that are part of PC1 used in previous analyses, and ask how much of the variability in symbiont community composition can be explained by these three metrics. Do not attempt to disentangle them and just treat them together, as they are treated in PC1.
+```{r}
+# Porites
+ord.porites.CAP2 <- ordinate(phy.f.t.porites,method="CAP",distance="wunifrac",formula= ~ daily.mean.range+daysover30+var)
+plot_ordination(phy.f.t.porites, ord.porites.CAP2,  shape="Site",type="scree",
+                title="97% within-sample OTUs - CAP Porites only")
+anova(ord.porites.CAP2)
+summary(ord.porites.CAP2)$cont$importance[3,3]
+vif.cca(ord.porites.CAP2)
+
+# Acropora
+ord.acropora.CAP2 <- ordinate(phy.f.t.acropora,method="CAP",distance="wunifrac",formula= ~ var+daily.mean.range+daysover30)
+plot_ordination(phy.f.t.acropora, ord.acropora.CAP2,  shape="Site",type="scree",
+                title="97% within-sample OTUs - CAP acropora only")
+anova(ord.acropora.CAP2)
+summary(ord.acropora.CAP2)$cont$importance[3,3]
+vif.cca(ord.acropora.CAP2)
 ```
 
 ## Constrained ordination - do temperature metrics drive differences in community structure?
@@ -611,12 +616,12 @@ Constrained ordination allows us to see how environmental variables (in our case
 Below, we construct a constrained ordination using our PCA temperature metrics, to see if any linear combinations between them are significant. We look at this for Acropora and Porites separately. The first figure for each coral species is the scree plot of eigenvalues: essentially how much variability is explaned by each of the constrained axes (CAP1-CAP4) after the constrained axes, the scree plot shows variability explained by unconstrained axes (MDS1-MDS16) - residual variability caused by factors that we did not include in our model.  
 After completing the ordination and plotting, we do a permutational ANOVA on constrained axes used in ordination. This tells us whether the model we have used is significant.  
 Ordistep is an automatic stepwise model building tool that can be used to build constrained ordinations. This is used because "Actually, constrained ordination methods do not have AIC, and therefore the step may not be trusted. This function provides an alternative using permutation P-values. http://cc.oulu.fi/~jarioksa/softhelp/vegan/html/ordistep.html" Also "Function ordistep defines the model, scope of models considered, and direction of the procedure similarly as step. The function alternates with drop and add steps and stops when the model was not changed during one step. The - and + signs in the summary table indicate which stage is performed. The number of permutations is selected adaptively with respect to the defined decision limit."
-```{r constrained_ordination temperature metrics}
+```{r constrained_ordination temperature metrics, eval=F}
 
 # try each species individually
 # PORITES
 # First run model selection using PCs
-ord.porites.CAP <- ordinate(phy.f.t.porites,method="CAP",distance="wunifrac",formula= ~ PC1 + PC2 + PC3 + PC4)
+ord.porites.CAP <- ordinate(phy.f.t.porites,method="CAP",distance="wunifrac",formula= ~ PC1)
 plot_ordination(phy.f.t.porites, ord.porites.CAP,  shape="Site",type="scree",
                 title="97% within-sample OTUs - CAP Porites only")
 
@@ -661,7 +666,7 @@ dev_mode(on=F)
 library(vegan)
 library(phyloseq)
 # Next try model selection using temperature metrics
-ord.porites.CAP2 <- ordinate(phy.f.t.porites,method="CAP",distance="wunifrac",formula= ~ mean+var+dip+daily.mean.min+daily.mean.max+daysover30+daysunder27)
+ord.porites.CAP2 <- ordinate(phy.f.t.porites,method="CAP",distance="wunifrac",formula= ~ daily.mean.range+daysover30+var)
 plot_ordination(phy.f.t.porites, ord.porites.CAP2,  shape="Site",type="scree",
                 title="97% within-sample OTUs - CAP Porites only")
 
@@ -673,7 +678,7 @@ anova(ord.porites.CAP2)
 # In a model with all 4 PCs included, this model (Porites, all temp metrics) is not significant at p=0.1
 
 set.seed(2000)
-finalmodel.porites.alltempmetrics <- ordistep(ord.porites.CAP2, formula= ~ mean+var+dip+daily.mean.min+daily.mean.max+daysover30+daysunder27, direction = c("both"), Pin = 0.05, Pout = 0.1, pstep = 100, perm.max = 1000, steps = 50, trace = TRUE)
+finalmodel.porites.alltempmetrics <- ordistep(ord.porites.CAP2, formula= ~ daily.mean.range+daysover30+var, direction = c("both"), Pin = 0.05, Pout = 0.1, pstep = 100, perm.max = 1000, steps = 50, trace = TRUE)
 
 finalmodel.porites.alltempmetrics
 # With stepwise model selection, only daysunder27 is retained in the final model for Porites (all temp metrics)
@@ -705,7 +710,7 @@ library(phyloseq)
 
 # ACROPORA
 # First run model selection using PCs
-ord.acropora.CAP <- ordinate(phy.f.t.acropora,method="CAP",distance="wunifrac",formula= ~ PC1 + PC2 + PC3 + PC4)
+ord.acropora.CAP <- ordinate(phy.f.t.acropora,method="CAP",distance="wunifrac",formula= ~ PC1)
 plot_ordination(phy.f.t.acropora, ord.acropora.CAP,  shape="Site",type="scree",
                 title="97% within-sample OTUs - CAP Acropora only")
 
@@ -746,7 +751,7 @@ library(vegan)
 library(phyloseq)
 
 # Now we can look at individual temperature metrics (rather than PCs)
-ord.acropora.CAP2 <- ordinate(phy.f.t.acropora,method="CAP",distance="wunifrac",formula= ~ mean+var+dip+daily.mean.min+daily.mean.max+daysover30+daysunder27)
+ord.acropora.CAP2 <- ordinate(phy.f.t.acropora,method="CAP",distance="wunifrac",formula= ~ var+daily.mean.range+daysover30)
 plot_ordination(phy.f.t.acropora, ord.acropora.CAP2,  shape="Site",type="scree",
                 title="97% within-sample OTUs - CAP acropora only")
 
@@ -758,7 +763,7 @@ anova(ord.acropora.CAP2)
 # In a model with all temp metrics included, this model (Acropora, all temp metrics) is significant at p=0.05
 
 set.seed(2000)
-finalmodel.acropora.alltempmetrics<-ordistep(ord.acropora.CAP2, formula= ~ mean+var+dip+daily.mean.min+daily.mean.max+daysover30+daysunder27, direction = c("both"), Pin = 0.05, Pout = 0.1, pstep = 100, perm.max = 1000, steps = 50, trace = TRUE)
+finalmodel.acropora.alltempmetrics<-ordistep(ord.acropora.CAP2, formula= ~ mean+var+daily.mean.min+daily.mean.max+daysover30+daysunder27, direction = c("both"), Pin = 0.05, Pout = 0.1, pstep = 100, perm.max = 1000, steps = 50, trace = TRUE)
 
 finalmodel.acropora.alltempmetrics
 # With stepwise model selection, mean+daily.mean.min+daysover30+daysunder27 were retained in the final model for Acropora (all temp metrics)
@@ -769,35 +774,23 @@ vif.cca(finalmodel.acropora.alltempmetrics)
 anova(finalmodel.acropora.alltempmetrics)
 ```
 
-## New idea for analysis: how much of the variability in Symbiodinium communities can be explained by "Site" alone?
-```{r constrained_ordination site, eval=F}
 
-acropora.CAP.site <- ordinate(phy.f.t.acropora, method="CAP", distance="wunifrac",
-                              formula= ~ factor(Site))
-plot_ordination(phy.f.t.acropora, acropora.CAP.site, type="scree")
-explained.by.site <- with(summary(acropora.CAP.site), constr.chi/tot.chi)
-acropora.CAP.temp <- ordinate(phy.f.t.acropora, method="CAP", distance="wunifrac",
-                              formula= ~ PC1 + PC2 + PC3 + PC4)
-acropora.CAP.temp <- ordinate(phy.f.t.acropora, method="CAP", distance="wunifrac",
-                              formula= ~ mean + var + daysover30 + daysunder27 +
-                                         daily.mean.min + daily.mean.max + dip)
-plot_ordination(phy.f.t.acropora, acropora.CAP.temp, type="scree")
-explained.by.temp <- with(summary(acropora.CAP.temp), constr.chi/tot.chi)
-
-# How much of the variability explained by Site can be explained by Temp?
-explained.by.temp / explained.by.site
-# 100%? something seems fishy.
+```{r}
+topten <- names(sort(rowSums(otu_table(phy.f.t.acropora)), decreasing=T)[1:10])
+site7 <- rownames(sample_data(phy.f.t.acropora)[which(sample_data(phy.f.t.acropora)$Site==" Site 7"),])
+otus <- data.frame(otu_table(phy.f.t.acropora)[topten, site7])
+otus$subtype <- as.character(tax_table(phy.f.t.acropora)[rownames(otus), "Subtype"])
+otus
+View(otus)
 
 
 
-# New idea for analysis: how much of the variability in Symbiodinium communities can be explained by "Site" alone?
-porites.CAP.site <- ordinate(phy.f.t.porites,method="CAP",distance="wunifrac",formula= ~ Site)
-explained.by.site <- with(summary(porites.CAP.site), constr.chi/tot.chi)
-porites.CAP.temp <- ordinate(phy.f.t.porites,method="CAP",distance="wunifrac",formula= ~ PC1 + PC2 + PC3 + PC4)
-porites.CAP.temp <- ordinate(phy.f.t.porites,method="CAP",distance="wunifrac",formula= ~ mean + var + daysover30 + daysunder27 + daily.mean.min + daily.mean.max + dip)
-explained.by.temp <- with(summary(porites.CAP.temp), constr.chi/tot.chi)
+topten <- names(sort(rowSums(otu_table(phy.f.t.porites)), decreasing=T)[1:10])
+site7 <- rownames(sample_data(phy.f.t.porites)[which(sample_data(phy.f.t.porites)$Site==" Site 7"),])
+otus <- data.frame(otu_table(phy.f.t.porites)[topten, site7])
+otus$subtype <- as.character(tax_table(phy.f.t.porites)[rownames(otus), "Subtype"])
+otus
+View(otus)
 
-# How much of the variability explained by Site can be explained by Temp?
-explained.by.temp / explained.by.site
 
 ```
