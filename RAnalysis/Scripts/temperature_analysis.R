@@ -242,39 +242,7 @@ temp.all <- join_all(list(Site.1,Site.2,Site.3,Site.7,Site.8,Site.9),by="Date.Ti
 #remove lines where data is not found for all sites
 temp.all <- na.omit(temp.all)
 
-#########################
-# Plot temperature supplemental figure
-library(zoo)
-sitecolors <- c('#1b9e77','#d95f02','#7570b3','#e7298a','#66a61e','#e6ab02')
-# Plot daily rolling means for the whole time interval (MCR6)
 
-plot(rollapply(MCR.6$Temp, 24, FUN=mean, fill=NA) ~ MCR.6$Date.Time, col="white",
-     xlim=c(as.POSIXct("2006-01-31"), as.POSIXct("2009-02-20")),
-     ylim=c(24.5, 30.3),
-     xlab="Date", ylab="Daily mean temperature (°C)")
-dates <- unique(as.Date(temp.all$Date.Time))
-breaks <- sort(c(1, which(diff(dates)!=1), which(diff(dates)!=1)+1, length(dates)))
-for (i in c(1,3,5)) {
-  ss <- dates[breaks[i]:breaks[i+1]]
-  rect(as.POSIXct(first(ss)), 24, as.POSIXct(last(ss)), 32, col=alpha("gray", 0.5), border=NA)
-}
-# Add lines for each site
-with(MCR.6, lines(rollapply(Temp, 24, FUN=mean, fill=NA) ~ Date.Time, type="l", col=alpha("black", 0.5)))
-with(Site.1, lines(rollapply(Site.1, 24, FUN=mean, fill=NA) ~ Date.Time, type="l", col=alpha(sitecolors[1], 0.5)))
-with(Site.2, lines(rollapply(Site.2, 24, FUN=mean, fill=NA) ~ Date.Time, type="l", col=alpha(sitecolors[2], 0.5)))
-with(Site.3, lines(rollapply(Site.3, 24, FUN=mean, fill=NA) ~ Date.Time, type="l", col=alpha(sitecolors[3], 0.5)))
-with(Site.7, lines(rollapply(Site.7, 24, FUN=mean, fill=NA) ~ Date.Time, type="l", col=alpha(sitecolors[4], 0.5)))
-with(Site.8, lines(rollapply(Site.8, 24, FUN=mean, fill=NA) ~ Date.Time, type="l", col=alpha(sitecolors[5], 0.5)))
-with(Site.9, lines(rollapply(Site.9, 24, FUN=mean, fill=NA) ~ Date.Time, type="l", col=alpha(sitecolors[6], 0.5)))
-
-# Add line indicating sampling timepoint
-abline(v=as.POSIXct("2009-02-20"), lty=2)
-
-# Add legend
-legend("bottom", lty=1, legend=c("Site 1", "Site 2", "Site 3", "Site 7", "Site 8", "Site 9", "MCR6"),
-       col=c(sitecolors, "black"), ncol=4, cex=0.7)
-
-#################
 
 # Calculate summary statistics for each site
 # Note that commented lines were tried in the original processing, but eliminated for repetitiveness
@@ -378,46 +346,7 @@ temp.summ$daysunder27 <- t(temp.daysunder27.sum)
 temp.summ$daysunder27.5 <- t(temp.daysunder27.5.sum)
 temp.summ$daysunder28 <- t(temp.daysunder28.sum)
 
-ggplot(data=temp.daily.max, aes(temp.daily.max$Site.1)) + geom_histogram()
-ggplot(data=temp.daily.max, aes(temp.daily.max$Site.2)) + geom_histogram()
-ggplot(data=temp.daily.max, aes(temp.daily.max$Site.3)) + geom_histogram()
-ggplot(data=temp.daily.max, aes(temp.daily.max$Site.7)) + geom_histogram()
-ggplot(data=temp.daily.max, aes(temp.daily.max$Site.8)) + geom_histogram()
-ggplot(data=temp.daily.max, aes(temp.daily.max$Site.9)) + geom_histogram()
-
-save(temp.all,temp.summ,file="RAnalysis/Data/tempdata.RData")
-
-
-
-
-
-
-# spectral density
-library(astsa)
-mvspec(temp.all$Site.1, log="no", kernel=kernel("daniell", 2))
-mvspec(temp.all$Site.2, log="no")
-mvspec(temp.all$Site.3, log="no")
-specvals <- mvspec(temp.all$Site.7, log="no", kernel=kernel("daniell", c(10,10)))
-specvals$spec
-mvspec(temp.all$Site.8, log="no")
-mvspec(temp.all$Site.9, log="no")
-
-
-#
-par(mfrow=c(1,2))
-hist(temp.all$Site.2, xlim=c(25,32), breaks=seq(25,32,0.25), 
-     main="Site 2 - subset", xlab="Temp °C")
-hist(Site.2$Site.2, xlim=c(25,32), breaks=seq(25,32,0.25), 
-     main="Site 2 - all", xlab="Temp °C")
-
-
-#
-par(mfrow=c(2,3), mar=c(3,3,2,2), mgp=c(1.5,0.1,0), tcl=-0.2)
-hist(temp.daily.range$Site.1, xlim=c(0,5), ylim=c(0,200), breaks=seq(0,5,0.25))
-hist(temp.daily.range$Site.2, xlim=c(0,5), ylim=c(0,200), breaks=seq(0,5,0.25))
-hist(temp.daily.range$Site.3, xlim=c(0,5), ylim=c(0,200), breaks=seq(0,5,0.25))
-hist(temp.daily.range$Site.7, xlim=c(0,5), ylim=c(0,200), breaks=seq(0,5,0.25))
-hist(temp.daily.range$Site.8, xlim=c(0,5), ylim=c(0,200), breaks=seq(0,5,0.25))
-hist(temp.daily.range$Site.9, xlim=c(0,5), ylim=c(0,200), breaks=seq(0,5,0.25))
-
+# SAVE TEMP DATA TO RDATA OBJECT
+save(Site.1, Site.2, Site.3, Site.7, Site.8, Site.9, MCR.6,
+     temp.all, temp.summ, file="RAnalysis/Data/tempdata.RData")
 
