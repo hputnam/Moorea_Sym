@@ -311,6 +311,10 @@ colnames(temp.daily.var) <- c("Date","Site.1","Site.2","Site.3","Site.7","Site.8
 temp.daily.range<- temp.daily.max - temp.daily.min
 temp.daily.range$Date <- temp.daily.max$Date
 
+
+
+
+
 temp.daysover30 <- temp.daily.max
 temp.daysover30$Site.1 <- temp.daily.max$Site.1>30
 temp.daysover30$Site.2 <- temp.daily.max$Site.2>30
@@ -366,6 +370,8 @@ temp.summ$daily.mean.min <- colMeans(temp.daily.min[2:7])
 temp.summ$daily.mean.max <- colMeans(temp.daily.max[2:7])
 temp.summ$daily.mean.range <- colMeans(temp.daily.range[2:7])
 temp.summ$daily.mean.var <- colMeans(temp.daily.var[2:7])
+temp.summ$daily.range.skewness <- apply(temp.daily.range[,2:7], 2, skewness)
+temp.summ$daily.range.kurtosis <- apply(temp.daily.range[,2:7], 2, kurtosis)
 temp.summ$daysover30 <- t(temp.daysover30.sum)
 temp.summ$daysover31 <- t(temp.daysover31.sum)
 temp.summ$daysunder27 <- t(temp.daysunder27.sum)
@@ -403,4 +409,15 @@ hist(temp.all$Site.2, xlim=c(25,32), breaks=seq(25,32,0.25),
      main="Site 2 - subset", xlab="Temp °C")
 hist(Site.2$Site.2, xlim=c(25,32), breaks=seq(25,32,0.25), 
      main="Site 2 - all", xlab="Temp °C")
+
+
+#
+par(mfrow=c(2,3), mar=c(3,3,2,2), mgp=c(1.5,0.1,0), tcl=-0.2)
+hist(temp.daily.range$Site.1, xlim=c(0,5), ylim=c(0,200), breaks=seq(0,5,0.25))
+hist(temp.daily.range$Site.2, xlim=c(0,5), ylim=c(0,200), breaks=seq(0,5,0.25))
+hist(temp.daily.range$Site.3, xlim=c(0,5), ylim=c(0,200), breaks=seq(0,5,0.25))
+hist(temp.daily.range$Site.7, xlim=c(0,5), ylim=c(0,200), breaks=seq(0,5,0.25))
+hist(temp.daily.range$Site.8, xlim=c(0,5), ylim=c(0,200), breaks=seq(0,5,0.25))
+hist(temp.daily.range$Site.9, xlim=c(0,5), ylim=c(0,200), breaks=seq(0,5,0.25))
+
 
