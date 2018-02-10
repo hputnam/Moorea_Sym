@@ -14,7 +14,7 @@ RAnalysis/Data/tempdata.RData: RAnalysis/Scripts/temperature_analysis.R
 
 # Filter out low read count taxa and samples from 97% within-sample OTUs
 RAnalysis/Data/Moorea_sym_f.RData: RAnalysis/Data/Moorea_sym.RData Bioinf/filter_phy.R
-	R --vanilla < Bioinf/filter_phy.R --args $< RAnalysis/Data/Moorea_sym_f.RData
+	R --vanilla < RAnalysis/Scripts/filter_phy.R --args $< RAnalysis/Data/Moorea_sym_f.RData
 
 # Filter out sequences that are not Symbiodinium from 97% within-sample OTUs
 RAnalysis/Data/Moorea_sym.RData: RAnalysis/Data/Moorea.RData Bioinf/clust/all_rep_set_rep_set.fasta
