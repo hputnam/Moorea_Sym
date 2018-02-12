@@ -19,8 +19,8 @@ library(lme4)
 library(MuMIn)
 library(imager)
 library(devtools)
-
-
+library(dplyr)
+library(scales)
 
 # Set options
 options(stringsAsFactors = FALSE)
@@ -33,11 +33,50 @@ taxcolors <- matrix(c("#d9d9d9", "#ffffb3", "#fb8072"),
 
 # Analyze temperature regimes at each site
 
-## Temperature data summary
-```{r temp_data}
+## Supplementary Figure 1
+```{r}
 # Load temperature data
 load("Data/tempdata.RData") # loads the temperature data from temperature_analysis
 
+#########################
+# Plot temperature supplemental figure
+library(zoo)
+sitecolors <- c('#1b9e77','#d95f02','#7570b3','#e7298a','#66a61e','#e6ab02')
+# Plot daily rolling means for the whole time interval (MCR6)
+
+plot(rollapply(MCR.6$Temp, 24, FUN=mean, fill=NA) ~ MCR.6$Date.Time, col="white",
+     xlim=c(as.POSIXct("2006-01-31"), as.POSIXct("2009-02-20")),
+     ylim=c(24.5, 30.3),
+     xlab="Date", ylab="Daily mean temperature (Â°C)")
+dates <- unique(as.Date(temp.all$Date.Time))
+breaks <- sort(c(1, which(diff(dates)!=1), which(diff(dates)!=1)+1, length(dates)))
+for (i in c(1,3,5)) {
+  ss <- dates[breaks[i]:breaks[i+1]]
+  rect(as.POSIXct(first(ss)), 24, as.POSIXct(last(ss)), 32, col=alpha("gray", 0.5), border=NA)
+}
+# Add lines for each site
+with(MCR.6, lines(rollapply(Temp, 24, FUN=mean, fill=NA) ~ Date.Time, type="l", col=alpha("black", 0.5)))
+with(Site.1, lines(rollapply(Site.1, 24, FUN=mean, fill=NA) ~ Date.Time, type="l", col=alpha(sitecolors[1], 0.5)))
+with(Site.2, lines(rollapply(Site.2, 24, FUN=mean, fill=NA) ~ Date.Time, type="l", col=alpha(sitecolors[2], 0.5)))
+with(Site.3, lines(rollapply(Site.3, 24, FUN=mean, fill=NA) ~ Date.Time, type="l", col=alpha(sitecolors[3], 0.5)))
+with(Site.7, lines(rollapply(Site.7, 24, FUN=mean, fill=NA) ~ Date.Time, type="l", col=alpha(sitecolors[4], 0.5)))
+with(Site.8, lines(rollapply(Site.8, 24, FUN=mean, fill=NA) ~ Date.Time, type="l", col=alpha(sitecolors[5], 0.5)))
+with(Site.9, lines(rollapply(Site.9, 24, FUN=mean, fill=NA) ~ Date.Time, type="l", col=alpha(sitecolors[6], 0.5)))
+
+# Add line indicating sampling timepoint
+abline(v=as.POSIXct("2009-02-20"), lty=2)
+
+# Add legend
+legend("bottom", lty=1, legend=c("Site 1", "Site 2", "Site 3", "Site 7", "Site 8", "Site 9", "MCR6"),
+       col=c(sitecolors, "black"), ncol=4, cex=0.7)
+
+#################
+```
+
+
+## Temperature data summary
+```{r temp_data}
+sitecolors <- c("#762a83", "#9970ab", "#c2a5cf", "#a6dba0", "#5aae61", "#1b7837")
 # Plot temperature distributions for each site
 par(mfrow=c(2,3), mar=c(3,3,2,2), mgp=c(1.5,0.1,0), tcl=-0.2)
 hist(temp.all$Site.1, xlim=c(25,32), breaks=seq(25,32,0.25), 
@@ -53,6 +92,24 @@ hist(temp.all$Site.8, xlim=c(25,32), breaks=seq(25,32,0.25),
 hist(temp.all$Site.9, xlim=c(25,32), breaks=seq(25,32,0.25), 
      main="Site 9", xlab="Temp ?C")
 
+# Plot mean daily cycle for each site
+times <- strptime(temp.all$Date.Time, format="%Y-%m-%d %H:%M:%S")
+temp.all$Time <- format(as.POSIXct(times), format="%H:%M")
+time.mean<-aggregate(cbind(temp.all$Site.1,temp.all$Site.2,temp.all$Site.3,temp.all$Site.7,temp.all$Site.8,temp.all$Site.9) ~ temp.all$Time, FUN=mean)
+colnames(time.mean) <- c("Time","Site.1","Site.2","Site.3","Site.7","Site.8","Site.9")
+time.mean$Time <- as.POSIXct(time.mean$Time, format="%H:%M")
+par(mfrow=c(1,1), mar=c(3,3,2,2), mgp=c(1.5,0.1,0), tcl=-0.2)
+with(time.mean, {
+  plot(Time, Site.1, type="b", ylim=range(time.mean[,2:7]), col=sitecolors[1])
+  points(Time, Site.2, type="b", col=sitecolors[2])
+  points(Time, Site.3, type="b", col=sitecolors[3])
+  points(Time, Site.7, type="b", col=sitecolors[4])
+  points(Time, Site.8, type="b", col=sitecolors[5])
+  points(Time, Site.9, type="b", col=sitecolors[6])
+})
+legend("bottom", lty=1, legend=c("Site 1", "Site 2", "Site 3", "Site 7", "Site 8", "Site 9"),
+       col=sitecolors, ncol=4, cex=0.7)
+
 # View Descriptive Stats
 temp.summ
 ```
@@ -60,11 +117,10 @@ temp.summ
 ## Multivariate temperature analysis
 ### Principal component analysis
 ```{r temp_pca}
-# Principal component analysis of temperature metrics
-
 ## Set which temperature metrics to include in PCA
-include <- c("mean", "var", "dip", "daily.mean.min", 
-             "daily.mean.max", "daysover30", "daysunder27")
+include <- c("var", "daily.mean.range", "daysover30")
+#include <- c("mean", "var", "daily.mean.min", "daily.mean.max", "daily.mean.range",
+#             "daysover30", "daysunder27")
 
 ## Subset temperature metrics for PCA
 temp <- as.data.frame(temp.summ[, include])
@@ -72,7 +128,7 @@ temp <- as.data.frame(temp.summ[, include])
 ## Run PCA
 pca.temp <- prcomp(temp, scale=TRUE)
 par(mfrow=c(1,1))
-screeplot(pca.temp)
+#screeplot(pca.temp)
 
 ## Calculate loading values of original metrics
 aload <- abs(pca.temp$rotation)
@@ -83,14 +139,16 @@ temp.PCs <- pca.temp$x
 
 ## Visualize PCA as biplot
 biplot(pca.temp)
+summary(pca.temp)
 ```
 
 ### Temperature regime radar chart
 ```{r radarchart}
 # Calculate ranges of each column
-temp2 <- rbind(apply(temp, 2, function(x) rev(range(x))), temp)
+temp2 <- rbind(apply(as.data.frame(temp.summ), 2, function(x) rev(range(x))),
+               as.data.frame(temp.summ))
 # Reorder columns
-temp2 <- temp2[, c(3,4,1,6,2,5,7)]
+temp2 <- temp2[, c(1,7,13,8,11,2,9)]
 # Plot radar chart
 rad <- radarchart(
   temp2,
@@ -114,13 +172,11 @@ legend("topright", rownames(temp2)[-(1:2)], lty=1, lwd=2, col=sitecolors, bty="n
 ```
 
 # Figure 1
-```{r Fig1, eval=T}
+```{r Fig1, eval=F}
 tiff("Output/Fig1.tiff", width=10, height=3, units="in", res=300)
-par(mfrow=c(1,3), mgp=c(1,0.1,0), tcl=0.25, cex.lab=1, cex.axis=0.8,
+par(mfrow=c(1,2), mgp=c(1,0.1,0), tcl=0.25, cex.lab=1, cex.axis=0.8,
     mar=c(2,2,2,2))
 layout(matrix(c(1,2,3), nrow=1, ncol=3, byrow = TRUE), heights=c(1,0.8,0.75), widths=c(3.5,3,3.5))
-
-
 
 # Panel A
 #### MAP OF MOOREA SHOWING SITE LOCATIONS
@@ -129,13 +185,13 @@ plot(moorea, axes=F, rescale=FALSE)
 title("a", adj=0)
 
 # Panel B
-biplot(pca.temp, cex=0.9, bty="n", xpd=NA, expand=1.1,
-       ylabs=c("Dip","Daily Mean\nMinimum   ","Mean","Days\nOver 30°C","Variance","Daily Mean    \nMaximum   ","Days Under\n27°C"),
-       xlim=c(-0.85,0.75),
-       ylim=c(-0.75,0.75))
-title("b", adj=0)
+#biplot(pca.temp, cex=0.9, bty="n", xpd=NA, expand=1.1,
+#       ylabs=c("Dip","Daily Mean\nMinimum   ","Mean","Days\nOver 30?C","Variance","Daily Mean  #  \nMaximum   ","Days Under\n27?C"),
+#       xlim=c(-0.85,0.75),
+#       ylim=c(-0.75,0.75))
+#title("b", adj=0)
 
-# Panel C
+# Panel B
 par(mar=c(1.5,1,1.5,2), xpd=NA)
 rad <- radarchart(
   temp2,
@@ -152,11 +208,12 @@ rad <- radarchart(
  
   #custom labels
   vlcex=1, 
-  vlabels = c("Dip","Daily Mean\nMinimum","Mean","Days Over\n30°C","Variance","       Daily Mean\n       Maximum","Days Under\n27°C")
+  vlabels = c("Mean", "Mean Daily\nMin.", "Days\nunder 27Â°C", "Mean Daily\nMax.",
+              "Days over 30Â°C", "Variance", "Mean Daily\nRange")
 )
-title("c", adj=0.05, line = 0)
-legend("topright", rownames(temp2)[-(1:2)], lty=1, lwd=2, col=sitecolors, bty="n", 
-       cex=0.9, ncol=2, inset=c(-0.02,-0.05))
+title("b", adj=0.05, line = 0)
+legend("topright", legend=c("Site 1", "Site 2", "Site 3", "Site 7", "Site 8", "Site 9"), 
+       lty=1, lwd=2, col=sitecolors, bty="n", cex=0.9, ncol=2, inset=c(-0.02,-0.05))
 dev.off()
 ```
 
@@ -172,31 +229,31 @@ load("Data/Moorea_sym_f.RData")  # loads phyloseq object for 97%-within-sample O
 
 # Append site temperature metrics to sample_data in phyloseq objects
 site.levels <- as.numeric(sample_data(phy.f)$Site)
-sample_data(phy.f)$mean <- temp[site.levels, "mean"]
-sample_data(phy.f)$var <- temp[site.levels, "var"]
-sample_data(phy.f)$dip <- temp[site.levels, "dip"]
-sample_data(phy.f)$daily.mean.min <- temp[site.levels, "daily.mean.min"]
-sample_data(phy.f)$daily.mean.max <- temp[site.levels, "daily.mean.max"]
-sample_data(phy.f)$daysover30 <- temp[site.levels, "daysover30"]
-sample_data(phy.f)$daysunder27 <- temp[site.levels, "daysover30"]
+sample_data(phy.f)$mean <- temp.summ[site.levels, "mean"]
+sample_data(phy.f)$var <- temp.summ[site.levels, "var"]
+#sample_data(phy.f)$dip <- temp[site.levels, "dip"]
+sample_data(phy.f)$daily.mean.min <- temp.summ[site.levels, "daily.mean.min"]
+sample_data(phy.f)$daily.mean.max <- temp.summ[site.levels, "daily.mean.max"]
+sample_data(phy.f)$daily.mean.range <- temp.summ[site.levels, "daily.mean.range"]
+sample_data(phy.f)$daysover30 <- temp.summ[site.levels, "daysover30"]
+sample_data(phy.f)$daysunder27 <- temp.summ[site.levels, "daysunder27"]
 
 # Append site temperature PCs to sample_data in phyloseq objects
 sample_data(phy.f)$PC1 <- temp.PCs[site.levels, "PC1"]
 sample_data(phy.f)$PC2 <- temp.PCs[site.levels, "PC2"]
 sample_data(phy.f)$PC3 <- temp.PCs[site.levels, "PC3"]
-sample_data(phy.f)$PC4 <- temp.PCs[site.levels, "PC4"]
-#sample_data(phy100.f)$PC1 <- temp.PCs[site.levels, "PC1"]
-#sample_data(phy100.f)$PC2 <- temp.PCs[site.levels, "PC2"]
-#sample_data(phy100.f)$PC3 <- temp.PCs[site.levels, "PC3"]
-#sample_data(phy100.f)$PC4 <- temp.PCs[site.levels, "PC4"]
+#sample_data(phy.f)$PC4 <- temp.PCs[site.levels, "PC4"]
+
 
 # Convert OTU counts to proportions (relative abundances)
 phy.f.p <- transform_sample_counts(phy.f, function(x) x/sum(x))
-#phy100.f.p <- transform_sample_counts(phy100.f, function(x) x/sum(x))
 # Square-root transform relative abundances
 transform <- function(x) sqrt(x/sum(x))  # Set transformation function
 phy.f.t <- transform_sample_counts(phy.f, transform)  # Transform data
-#phy100.f.t <- transform_sample_counts(phy100.f, transform)  # Transform data
+
+# Save OTU table and tax table as supplementary tables
+write.csv(otu_table(phy.f.p), file="Output/OTU_table.csv", row.names=F, quote=F)
+write.csv(tax_table(phy.f.p), file="Output/tax_table.csv", row.names=F, quote=F)
 ```
 
 ## Visualize *Symbiodinium* clade abundances
@@ -256,6 +313,10 @@ composition <- function(phy, col, legend=T) {
   #  text(0, i-0.5, rownames(samdat)[i], xpd=T, cex=0.7, pos=2)
   #}
 }
+
+par(mfrow=c(1,1), mar=c(2, 1.5, 2, 10), lwd=0.1, cex=0.7, xpd=NA)
+# Plot composition of 97% within-sample OTUs colored by clade
+composition(phy.f.p, col=taxcolors[factor(data.frame(tax_table(phy.f.p))[order(data.frame(tax_table(phy.f.p))$Subtype), ]$Clade, levels=c("A","C","D"))], legend=T)
 
 tiff("Output/Fig2.tiff", width=3.5, height=5, units="in", res=300)
 par(mfrow=c(1,1), mar=c(2, 1.5, 2, 10), lwd=0.1, cex=0.7, xpd=NA)
@@ -424,6 +485,61 @@ with(por.bdsumm, {
 
 # Figure 3
 ```{r Fig3}
+par(mfrow=c(2,2), mar=c(2,2,1,1), mgp=c(1.1,0.1,0), tcl=0.2, 
+    cex.axis=0.8, cex.lab=1)
+
+# Panel A
+plot(acr.bd, hull=F, label=F, col=sitecolors, seg.col=sitecolors,
+     xlab="PCoA 1", ylab="PCoA 2", main="", cex=1)
+ordihull(acr.bd, sample_data(phy.f.t.acropora)$Site,  draw = c("polygon"),
+         col = sitecolors, alpha=0.2, lwd=0.05)
+# legend("topright", bty="n", pch=1:6, cex=0.6,
+#        legend=levels(sample_data(phy.f.t.acropora)$Site),
+#        col=sitecolors)
+#text(par("usr")[1], par("usr")[4], "A.", font=2, xpd=NA, pos=2, cex=1.25)
+mtext(side=3, adj=-0.23, "a", font=2)
+mtext(side=3, adj=0.95, padj=1.7, substitute(paste(italic("Acropora"))), font=2, cex=0.75)
+
+# Panel B
+with(acr.bdsumm, {
+  plot(mean, type="n", ylim=c(0, 0.15), ylab="Distance to centroid", xaxt="n", 
+       xlab="Site",xlim=c(0.85,6.15))
+  points(1:6, mean, cex=1, pch=1:6, col=sitecolors, lwd=2)
+  arrows(1:6, mean - se, 1:6, mean + se, length=0.025, angle=90, code=3, lwd=0.5)
+  axis(side=1, at=1:6, cex.axis=0.75, labels=c(1,2,3,7,8,9))
+  text(1:6, mean+se+0.01, l, cex=0.5)
+})
+#text(par("usr")[1]-0.3, par("usr")[4], "B.", font=2, xpd=NA, pos=2, cex=1.25)
+mtext(side=3, adj=-0.25, "b", font=2)
+mtext(side=3, adj=0.95, padj=1.7, substitute(paste(italic("Acropora"))), font=2, cex=0.75)
+
+# Panel C
+plot(por.bd, hull=F, label=F, col=sitecolors, seg.col=sitecolors,
+     xlab="PCoA 1", ylab="PCoA 2", main="", cex=1)
+ordihull(por.bd, sample_data(phy.f.t.porites)$Site,  draw = c("polygon"),
+         col = sitecolors, alpha=0.2, lwd=0.05)
+# legend("topright", bty="n", pch=1:6, cex=0.6,
+#        legend=levels(sample_data(phy.f.t.porites)$Site),
+#        col=sitecolors)
+#text(par("usr")[1], par("usr")[4], "C.", font=2, xpd=NA, pos=2, cex=1.25)
+mtext(side=3, adj=-0.23, "c", font=2)
+mtext(side=3, adj=0.95, padj=1.85, substitute(paste(italic("Porites"))), font=2, cex=0.75)
+
+# Panel D
+with(por.bdsumm, {
+  plot(mean, type="n", ylim=c(0, 0.04), ylab="Distance to centroid", xaxt="n", 
+       xlab="Site",xlim=c(0.85,6.15))
+  points(1:6, mean, cex=1, pch=1:6, col=sitecolors, lwd=2)
+  arrows(1:6, mean - se, 1:6, mean + se, length=0.025, angle=90, code=3, lwd=0.5)
+  axis(side=1, at=1:6, cex.axis=0.75, labels=c(1,2,3,7,8,9))
+  text(1:6, mean+se+0.0035, l, cex=0.5)
+})
+#text(par("usr")[1]-0.3, par("usr")[4], "D.", font=2, xpd=NA, pos=2, cex=1.25)
+mtext(side=3, adj=-0.25, "d", font=2)
+mtext(side=3, adj=0.95, padj=1.85, substitute(paste(italic("Porites"))), font=2, cex=0.75)
+
+
+# save as tiff
 tiff("Output/Fig3.tiff", width=4, height=4, units="in", res=300)
 par(mfrow=c(2,2), mar=c(2,2,1,1), mgp=c(1.1,0.1,0), tcl=0.2, 
     cex.axis=0.8, cex.lab=1)
@@ -489,11 +605,12 @@ bd <- betadisper(d=ufdist, group=sample_data(phy.f.t)$Site,
 
 temp.var <- as.data.frame(sample_data(phy.f.t)[, "var"])
 temp.mean <- as.data.frame(sample_data(phy.f.t)[, "mean"])
-temp.dip <- as.data.frame(sample_data(phy.f.t)[, "dip"])
+#temp.dip <- as.data.frame(sample_data(phy.f.t)[, "dip"])
 temp.do30 <- as.data.frame(sample_data(phy.f.t)[, "daysover30"])
 temp.du27 <- as.data.frame(sample_data(phy.f.t)[, "daysunder27"])
 temp.dmmax <- as.data.frame(sample_data(phy.f.t)[, "daily.mean.max"])
 temp.dmmin <- as.data.frame(sample_data(phy.f.t)[, "daily.mean.min"])
+temp.dmrange <- as.data.frame(sample_data(phy.f.t)[, "daily.mean.range"])
 species <- sample_data(phy.f.t)$Species
 site <- sample_data(phy.f.t)$Site
 
@@ -501,13 +618,14 @@ hist(log(bd$distances))
 
 mod.var <- lmer(log(bd$distances) ~ temp.var$var*species + 1|site)
 mod.mean <- lmer(log(bd$distances) ~ temp.mean$mean*species + 1|site)
-mod.dip <- lmer(log(bd$distances) ~ temp.dip$dip*species + 1|site)
+#mod.dip <- lmer(log(bd$distances) ~ temp.dip$dip*species + 1|site)
 mod.do30 <- lmer(log(bd$distances) ~ temp.do30$daysover30*species + 1|site)
 mod.du27 <- lmer(log(bd$distances) ~ temp.du27$daysunder27*species + 1|site)
 mod.dmmax <- lmer(log(bd$distances) ~ temp.dmmax$daily.mean.max*species + 1|site)
 mod.dmmin <- lmer(log(bd$distances) ~ temp.dmmin$daily.mean.min*species + 1|site)
+mod.dmrange <- lmer(log(bd$distances) ~ temp.dmrange$daily.mean.range*species + 1|site)
 
-mod.test <- AICc(mod.do30, mod.du27,mod.var, mod.dip, mod.dmmax, mod.dmmin, mod.mean,  k = 2, REML = T)
+mod.test <- AICc(mod.do30, mod.du27,mod.var, mod.dmrange, mod.mean,  k = 2, REML = T)
 mod.test$deltas <- round(mod.test$AICc-min(mod.test$AICc), 2)
 mod.test$weights <- Weights(mod.test$AICc)
 mod.test
@@ -530,13 +648,13 @@ plot.bd.temp <- function(metric) {
   por.pval <- round(anova(por.mod)$`Pr(>F)`[1], 3)
   if (acr.pval < 0.05) {  # If slope is significantly different from 0
     abline(acr.mod, col="#d8b365")
-    text(x=par("usr")[1], y=quantile(par("usr")[3:4], 0.9), pos=4, 
+    text(x=par("usr")[2], y=quantile(par("usr")[3:4], 0.9), pos=2, 
          labels=substitute(paste(italic("Acropora"), ": p=", acr.pval)),
          col="#d8b365")
   }
   if (por.pval < 0.05) {  # If slope is significantly different from 0
     abline(por.mod, col="#5ab4ac")
-    text(x=par("usr")[1], y=quantile(par("usr")[3:4], 0.8), pos=4, 
+    text(x=par("usr")[2], y=quantile(par("usr")[3:4], 0.8), pos=2, 
          labels=substitute(paste(italic("Porites"), ": p=", por.pval)),
          col="#5ab4ac")
   }
@@ -545,33 +663,53 @@ plot.bd.temp <- function(metric) {
 }
 
 # Plot beta diversity as a function of temperature PCs
-par(mfrow=c(2,2), mar=c(2.5,2.5,1,1), mgp=c(1.5,0.3,0), tcl=-0.2)
+par(mfrow=c(1,1), mar=c(2.5,2.5,1,1), mgp=c(1.5,0.3,0), tcl=-0.2, xpd=F)
 plot.bd.temp("PC1")
-plot.bd.temp("PC2")
-plot.bd.temp("PC3")
-plot.bd.temp("PC4")
+#plot.bd.temp("PC2")
+
+
 
 # # Plot beta diversity as a function of original temperature metrics
 # par(mfrow=c(2,2), mar=c(2.5,2.5,1,1), mgp=c(1.5,0.3,0), tcl=-0.2)
-# plot.bd.temp("var")
-# plot.bd.temp("mean")
-# plot.bd.temp("dip")
-# plot.bd.temp("daysover30")
-# plot.bd.temp("daysunder27")
-# plot.bd.temp("daily.mean.max")
+plot.bd.temp("var")
+#plot.bd.temp("mean")
+#plot.bd.temp("dip")
+plot.bd.temp("daysover30")
+#plot.bd.temp("daysunder27")
+plot.bd.temp("daily.mean.range")
 # plot.bd.temp("daily.mean.min")
 ```
 
 # Figure 4
 ```{r Fig4}
-tiff("Output/Fig4.tiff", width=4, height=2, units="in", res=300)
-par(mfrow=c(1,2), mar=c(2,2,1,1), mgp=c(1.1,0.1,0), tcl=0.2, 
+tiff("Output/Fig4.tiff", width=2, height=2, units="in", res=300)
+par(mfrow=c(1,1), mar=c(2,2,1,1), mgp=c(1.1,0.1,0), tcl=0.2, 
     cex=0.6, cex.axis=0.8)
 plot.bd.temp("PC1")
 mtext(side=3, adj=-0.16, "a", font=2, line=-0.3)
-plot.bd.temp("PC2")
-mtext(side=3, adj=-0.16, "b", font=2, line=-0.3)
+#plot.bd.temp("PC2")
+#mtext(side=3, adj=-0.16, "b", font=2, line=-0.3)
 dev.off()
+```
+
+## Constrained ordination -- abbreviated version
+Use the three highly correlated temperature metrics that are part of PC1 used in previous analyses, and ask how much of the variability in symbiont community composition can be explained by these three metrics. Do not attempt to disentangle them and just treat them together, as they are treated in PC1.
+```{r}
+# Porites
+ord.porites.CAP2 <- ordinate(phy.f.t.porites,method="CAP",distance="wunifrac",formula= ~ daily.mean.range+daysover30+var)
+plot_ordination(phy.f.t.porites, ord.porites.CAP2,  shape="Site",type="scree",
+                title="97% within-sample OTUs - CAP Porites only")
+anova(ord.porites.CAP2)
+summary(ord.porites.CAP2)$cont$importance[3,3]
+vif.cca(ord.porites.CAP2)
+
+# Acropora
+ord.acropora.CAP2 <- ordinate(phy.f.t.acropora,method="CAP",distance="wunifrac",formula= ~ var+daily.mean.range+daysover30)
+plot_ordination(phy.f.t.acropora, ord.acropora.CAP2,  shape="Site",type="scree",
+                title="97% within-sample OTUs - CAP acropora only")
+anova(ord.acropora.CAP2)
+summary(ord.acropora.CAP2)$cont$importance[3,3]
+vif.cca(ord.acropora.CAP2)
 ```
 
 ## Constrained ordination - do temperature metrics drive differences in community structure?
@@ -580,12 +718,12 @@ Constrained ordination allows us to see how environmental variables (in our case
 Below, we construct a constrained ordination using our PCA temperature metrics, to see if any linear combinations between them are significant. We look at this for Acropora and Porites separately. The first figure for each coral species is the scree plot of eigenvalues: essentially how much variability is explaned by each of the constrained axes (CAP1-CAP4) after the constrained axes, the scree plot shows variability explained by unconstrained axes (MDS1-MDS16) - residual variability caused by factors that we did not include in our model.  
 After completing the ordination and plotting, we do a permutational ANOVA on constrained axes used in ordination. This tells us whether the model we have used is significant.  
 Ordistep is an automatic stepwise model building tool that can be used to build constrained ordinations. This is used because "Actually, constrained ordination methods do not have AIC, and therefore the step may not be trusted. This function provides an alternative using permutation P-values. http://cc.oulu.fi/~jarioksa/softhelp/vegan/html/ordistep.html" Also "Function ordistep defines the model, scope of models considered, and direction of the procedure similarly as step. The function alternates with drop and add steps and stops when the model was not changed during one step. The - and + signs in the summary table indicate which stage is performed. The number of permutations is selected adaptively with respect to the defined decision limit."
-```{r constrained_ordination temperature metrics}
+```{r constrained_ordination temperature metrics, eval=F}
 
 # try each species individually
 # PORITES
 # First run model selection using PCs
-ord.porites.CAP <- ordinate(phy.f.t.porites,method="CAP",distance="wunifrac",formula= ~ PC1 + PC2 + PC3 + PC4)
+ord.porites.CAP <- ordinate(phy.f.t.porites,method="CAP",distance="wunifrac",formula= ~ PC1)
 plot_ordination(phy.f.t.porites, ord.porites.CAP,  shape="Site",type="scree",
                 title="97% within-sample OTUs - CAP Porites only")
 
@@ -630,7 +768,7 @@ dev_mode(on=F)
 library(vegan)
 library(phyloseq)
 # Next try model selection using temperature metrics
-ord.porites.CAP2 <- ordinate(phy.f.t.porites,method="CAP",distance="wunifrac",formula= ~ mean+var+dip+daily.mean.min+daily.mean.max+daysover30+daysunder27)
+ord.porites.CAP2 <- ordinate(phy.f.t.porites,method="CAP",distance="wunifrac",formula= ~ daily.mean.range+daysover30+var)
 plot_ordination(phy.f.t.porites, ord.porites.CAP2,  shape="Site",type="scree",
                 title="97% within-sample OTUs - CAP Porites only")
 
@@ -642,7 +780,7 @@ anova(ord.porites.CAP2)
 # In a model with all 4 PCs included, this model (Porites, all temp metrics) is not significant at p=0.1
 
 set.seed(2000)
-finalmodel.porites.alltempmetrics <- ordistep(ord.porites.CAP2, formula= ~ mean+var+dip+daily.mean.min+daily.mean.max+daysover30+daysunder27, direction = c("both"), Pin = 0.05, Pout = 0.1, pstep = 100, perm.max = 1000, steps = 50, trace = TRUE)
+finalmodel.porites.alltempmetrics <- ordistep(ord.porites.CAP2, formula= ~ daily.mean.range+daysover30+var, direction = c("both"), Pin = 0.05, Pout = 0.1, pstep = 100, perm.max = 1000, steps = 50, trace = TRUE)
 
 finalmodel.porites.alltempmetrics
 # With stepwise model selection, only daysunder27 is retained in the final model for Porites (all temp metrics)
@@ -674,7 +812,7 @@ library(phyloseq)
 
 # ACROPORA
 # First run model selection using PCs
-ord.acropora.CAP <- ordinate(phy.f.t.acropora,method="CAP",distance="wunifrac",formula= ~ PC1 + PC2 + PC3 + PC4)
+ord.acropora.CAP <- ordinate(phy.f.t.acropora,method="CAP",distance="wunifrac",formula= ~ PC1)
 plot_ordination(phy.f.t.acropora, ord.acropora.CAP,  shape="Site",type="scree",
                 title="97% within-sample OTUs - CAP Acropora only")
 
@@ -715,7 +853,7 @@ library(vegan)
 library(phyloseq)
 
 # Now we can look at individual temperature metrics (rather than PCs)
-ord.acropora.CAP2 <- ordinate(phy.f.t.acropora,method="CAP",distance="wunifrac",formula= ~ mean+var+dip+daily.mean.min+daily.mean.max+daysover30+daysunder27)
+ord.acropora.CAP2 <- ordinate(phy.f.t.acropora,method="CAP",distance="wunifrac",formula= ~ var+daily.mean.range+daysover30)
 plot_ordination(phy.f.t.acropora, ord.acropora.CAP2,  shape="Site",type="scree",
                 title="97% within-sample OTUs - CAP acropora only")
 
@@ -727,7 +865,7 @@ anova(ord.acropora.CAP2)
 # In a model with all temp metrics included, this model (Acropora, all temp metrics) is significant at p=0.05
 
 set.seed(2000)
-finalmodel.acropora.alltempmetrics<-ordistep(ord.acropora.CAP2, formula= ~ mean+var+dip+daily.mean.min+daily.mean.max+daysover30+daysunder27, direction = c("both"), Pin = 0.05, Pout = 0.1, pstep = 100, perm.max = 1000, steps = 50, trace = TRUE)
+finalmodel.acropora.alltempmetrics<-ordistep(ord.acropora.CAP2, formula= ~ mean+var+daily.mean.min+daily.mean.max+daysover30+daysunder27, direction = c("both"), Pin = 0.05, Pout = 0.1, pstep = 100, perm.max = 1000, steps = 50, trace = TRUE)
 
 finalmodel.acropora.alltempmetrics
 # With stepwise model selection, mean+daily.mean.min+daysover30+daysunder27 were retained in the final model for Acropora (all temp metrics)
@@ -738,35 +876,23 @@ vif.cca(finalmodel.acropora.alltempmetrics)
 anova(finalmodel.acropora.alltempmetrics)
 ```
 
-## New idea for analysis: how much of the variability in Symbiodinium communities can be explained by "Site" alone?
-```{r constrained_ordination site, eval=F}
 
-acropora.CAP.site <- ordinate(phy.f.t.acropora, method="CAP", distance="wunifrac",
-                              formula= ~ factor(Site))
-plot_ordination(phy.f.t.acropora, acropora.CAP.site, type="scree")
-explained.by.site <- with(summary(acropora.CAP.site), constr.chi/tot.chi)
-acropora.CAP.temp <- ordinate(phy.f.t.acropora, method="CAP", distance="wunifrac",
-                              formula= ~ PC1 + PC2 + PC3 + PC4)
-acropora.CAP.temp <- ordinate(phy.f.t.acropora, method="CAP", distance="wunifrac",
-                              formula= ~ mean + var + daysover30 + daysunder27 +
-                                         daily.mean.min + daily.mean.max + dip)
-plot_ordination(phy.f.t.acropora, acropora.CAP.temp, type="scree")
-explained.by.temp <- with(summary(acropora.CAP.temp), constr.chi/tot.chi)
-
-# How much of the variability explained by Site can be explained by Temp?
-explained.by.temp / explained.by.site
-# 100%? something seems fishy.
+```{r}
+topten <- names(sort(rowSums(otu_table(phy.f.t.acropora)), decreasing=T)[1:10])
+site7 <- rownames(sample_data(phy.f.t.acropora)[which(sample_data(phy.f.t.acropora)$Site==" Site 7"),])
+otus <- data.frame(otu_table(phy.f.t.acropora)[topten, site7])
+otus$subtype <- as.character(tax_table(phy.f.t.acropora)[rownames(otus), "Subtype"])
+otus
+View(otus)
 
 
 
-# New idea for analysis: how much of the variability in Symbiodinium communities can be explained by "Site" alone?
-porites.CAP.site <- ordinate(phy.f.t.porites,method="CAP",distance="wunifrac",formula= ~ Site)
-explained.by.site <- with(summary(porites.CAP.site), constr.chi/tot.chi)
-porites.CAP.temp <- ordinate(phy.f.t.porites,method="CAP",distance="wunifrac",formula= ~ PC1 + PC2 + PC3 + PC4)
-porites.CAP.temp <- ordinate(phy.f.t.porites,method="CAP",distance="wunifrac",formula= ~ mean + var + daysover30 + daysunder27 + daily.mean.min + daily.mean.max + dip)
-explained.by.temp <- with(summary(porites.CAP.temp), constr.chi/tot.chi)
+topten <- names(sort(rowSums(otu_table(phy.f.t.porites)), decreasing=T)[1:10])
+site7 <- rownames(sample_data(phy.f.t.porites)[which(sample_data(phy.f.t.porites)$Site==" Site 7"),])
+otus <- data.frame(otu_table(phy.f.t.porites)[topten, site7])
+otus$subtype <- as.character(tax_table(phy.f.t.porites)[rownames(otus), "Subtype"])
+otus
+View(otus)
 
-# How much of the variability explained by Site can be explained by Temp?
-explained.by.temp / explained.by.site
 
 ```
